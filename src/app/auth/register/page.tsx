@@ -100,12 +100,17 @@ export default function RegisterPage() {
 
       if (!response.ok) {
         if (data.errors) {
-          // Set field-specific errors
-          Object.entries(data.errors).forEach(([field, message]) => {
-            form.setError(field as any, {
-              type: "manual",
-              message: message as string,
-            });
+          type FormFieldNames = keyof FormValues;
+          type FormErrors = Partial<Record<FormFieldNames, string>>;
+          const errors = data.errors as FormErrors;
+
+          Object.entries(errors).forEach(([field, message]) => {
+            if (field in values && typeof message === "string") {
+              form.setError(field as FormFieldNames, {
+                type: "manual",
+                message,
+              });
+            }
           });
         } else if (data.error) {
           setError(data.error);
