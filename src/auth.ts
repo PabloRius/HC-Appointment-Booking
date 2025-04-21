@@ -7,48 +7,64 @@ import { LoginSchema } from "./schemas";
 export const { auth, handlers, signIn, signOut } = NextAuth({
   providers: [
     Credentials({
-      name: "credentials",
       credentials: {
-        nationalId: { label: "National ID", type: "text" },
+        id: { label: "National ID", type: "text" },
         password: { label: "Password", type: "password" },
+        userType: { type: "hidden" },
       },
       async authorize(credentials) {
         const validatedFields = LoginSchema.safeParse(credentials);
 
         if (!validatedFields.success) return null;
 
-        const { nationalId, password } = validatedFields.data;
+        const { id, password, userType } = validatedFields.data;
 
-        const user = await prisma.user.findUnique({ where: { nationalId } });
+        if (userType === "patient") {
+          console.log("Logging a patient");
+          const user = await prisma.patient.findUnique({
+            where: { nationalId: id },
+          });
 
-        if (!user || !user.password) {
-          return null;
+          if (!user || !user.password) return null;
+
+          const passwordsMatch = await bcrypt.compare(password, user.password);
+          if (!passwordsMatch) return null;
+
+          return {
+            id: user.id,
+            nationalId: user.nationalId,
+            email: user.email,
+            name: user.name,
+            role: "patient",
+          };
+        } else if (userType === "doctor") {
+          const doctor = await prisma.doctor.findUnique({
+            where: { Id: id },
+          });
+
+          if (!doctor || !doctor.password) return null;
+
+          const passwordsMatch = await bcrypt.compare(
+            password as string,
+            doctor.password
+          );
+
+          if (!passwordsMatch) return null;
+
+          return {
+            id: doctor.id,
+            doctorId: doctor.Id,
+            email: doctor.email,
+            name: doctor.name,
+            role: "doctor",
+          };
         }
-
-        const passwordsMatch = await bcrypt.compare(password, user.password);
-
-        if (!passwordsMatch) {
-          return null;
-        }
-
-        return user;
+        return null;
       },
     }),
   ],
   session: { strategy: "jwt" },
-  callbacks: {
-    async session({ session, user }) {
-      const userData = await prisma.user.findUnique({ where: { id: user.id } });
-      if (!userData) return session;
-
-      const customUserInfo = {
-        ...session.user,
-        nationalId: userData.nationalId,
-      };
-      return { ...session, user: customUserInfo };
-    },
-  },
   pages: {
-    signIn: "/",
+    signIn: "/auth/login",
   },
 });

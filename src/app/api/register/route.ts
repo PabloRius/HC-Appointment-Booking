@@ -9,8 +9,22 @@ export async function POST(request: Request) {
   const validatedFields = RegisterSchema.safeParse(body);
 
   if (!validatedFields.success) {
-    console.error(validatedFields.error);
-    return NextResponse.json({ error: "Invalid fields" }, { status: 400 });
+    const errors = validatedFields.error.flatten().fieldErrors;
+    const formattedErrors = Object.entries(errors).reduce(
+      (acc, [key, value]) => {
+        acc[key] = value?.[0];
+        return acc;
+      },
+      {} as Record<string, string>
+    );
+
+    return NextResponse.json(
+      {
+        error: "Validation failed",
+        errors: formattedErrors,
+      },
+      { status: 400 }
+    );
   }
 
   const {
@@ -23,12 +37,12 @@ export async function POST(request: Request) {
     gender,
     address,
   } = validatedFields.data;
-  const existingUser = await prisma.user.findUnique({
+  const existingUser = await prisma.patient.findUnique({
     where: { nationalId },
   });
 
   if (existingUser) {
-    console.error("The user already exists");
+    console.error("The national ID already exists");
     return NextResponse.json(
       { error: "National ID already in use" },
       { status: 400 }
@@ -38,24 +52,25 @@ export async function POST(request: Request) {
   const hashedPassword = await bcrypt.hash(password, 10);
 
   try {
-    const user = await prisma.user.create({
+    await prisma.patient.create({
       data: {
         nationalId,
         password: hashedPassword,
         name,
         email,
-        phone,
+        phone: `${phone.prefix}${phone.number}`,
         dateOfBirth: new Date(dateOfBirth),
         gender,
         address,
       },
     });
-    return NextResponse.json(user);
+
+    return NextResponse.json({ status: 200 });
   } catch (err) {
-    console.error(`Error creating the profile: ${err}`);
+    console.error("Server error:", err);
     return NextResponse.json(
-      { error: `Error creating the profile: ${err}` },
-      { status: 400 }
+      { error: "Internal server error" },
+      { status: 500 }
     );
   }
 }
