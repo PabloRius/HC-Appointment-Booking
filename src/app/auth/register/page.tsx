@@ -31,13 +31,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useProfile } from "@/hooks/useProfile";
 import { cn } from "@/lib/utils";
 import { RegisterSchema } from "@/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { ArrowLeft, CalendarIcon, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, CalendarIcon, Eye, EyeOff, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -81,7 +82,17 @@ export default function RegisterPage() {
       address: "",
     },
     mode: "onBlur",
+    criteriaMode: "all",
   });
+
+  const { profile, loading } = useProfile();
+  if (loading)
+    return (
+      <div className="flex w-full h-full items-center justify-center">
+        <Loader2 className="animate-spin w-10 h-10" />
+      </div>
+    );
+  if (profile) redirect("/dashboard");
 
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
@@ -99,18 +110,13 @@ export default function RegisterPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        if (data.errors) {
-          type FormFieldNames = keyof FormValues;
-          type FormErrors = Partial<Record<FormFieldNames, string>>;
-          const errors = data.errors as FormErrors;
-
-          Object.entries(errors).forEach(([field, message]) => {
-            if (field in values && typeof message === "string") {
-              form.setError(field as FormFieldNames, {
-                type: "manual",
-                message,
-              });
-            }
+        if (data.errors && typeof data.errors === "object") {
+          const fieldErrors = data.errors as Record<string, string>;
+          Object.entries(fieldErrors).forEach(([field, message]) => {
+            form.setError(field as keyof FormValues, {
+              type: "server",
+              message,
+            });
           });
         } else if (data.error) {
           setError(data.error);
@@ -127,9 +133,6 @@ export default function RegisterPage() {
       setIsLoading(false);
     }
   };
-
-  // Disable submit button when form is invalid
-  const isFormValid = form.formState.isValid && !isLoading;
 
   return (
     <div className="w-full flex flex-col items-center justify-center py-10">
@@ -427,7 +430,7 @@ export default function RegisterPage() {
                 <Button
                   type="submit"
                   className="w-full bg-teal-600 hover:bg-teal-700"
-                  disabled={!isFormValid || isLoading}
+                  disabled={isLoading}
                 >
                   {isLoading ? "Creating account..." : "Create Account"}
                 </Button>

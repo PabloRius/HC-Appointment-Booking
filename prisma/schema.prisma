@@ -14,16 +14,31 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Patient {
+model User {
   id              String          @id @default(auto()) @map("_id") @db.ObjectId
 
-  nationalId      String          @unique
+  loginId         String          @unique
   password        String
 
-  email           String?         @unique
+  role            String
+
+  patientProfile  PatientProfile?
+  doctorProfile   DoctorProfile?
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+model PatientProfile {
+  id              String          @id @default(auto()) @map("_id") @db.ObjectId
+
+  user            User            @relation(fields: [userId], references: [id])
+  userId          String          @unique @db.ObjectId
+
+  email           String          @unique
   phone           String
 
-  name            String?
+  name            String
   dateOfBirth     DateTime
   gender          String
   address         String?
@@ -31,20 +46,65 @@ model Patient {
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
-  medicalHistory  String?
+  appointments    Appointment[]
+  records         EHRRecord[]
 }
 
-model Doctor {
+model DoctorProfile {
+  id              String          @id @default(auto()) @map("_id") @db.ObjectId
+
+  user            User            @relation(fields: [userId], references: [id])
+  userId          String          @unique @db.ObjectId
+
+  email           String          @unique
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  name            String
+  phone           String
+  gender          String
+
+  timeslots       Timeslot[]
+  createdRecords  EHRRecord[]
+}
+
+model Appointment {
   id            String          @id @default(auto()) @map("_id") @db.ObjectId
-  Id            String          @unique
-  password      String
 
-  email         String?         @unique
+  status        String
+  notes         String?
 
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  timeslot      Timeslot        @relation(fields: [timeslotId], references: [id])
+  timeslotId    String          @unique @db.ObjectId
 
-  name          String?
-  phone         String
-  gender        String
+  patient       PatientProfile  @relation(fields: [patientId], references: [id])
+  patientId     String          @db.ObjectId
+}
+
+model Timeslot {
+  id            String          @id @default(auto()) @map("_id") @db.ObjectId
+  
+  startTime     DateTime
+  endTime       DateTime
+
+  appointment   Appointment?
+  
+  doctor        DoctorProfile   @relation(fields: [doctorId], references: [id])
+  doctorId      String          @db.ObjectId
+}
+
+model EHRRecord {
+  id             String         @id @default(auto()) @map("_id") @db.ObjectId
+
+  title          String
+  description    String?
+
+  patient       PatientProfile  @relation(fields: [patientId], references: [id])
+  patientId     String          @db.ObjectId
+
+  createdBy      DoctorProfile  @relation(fields: [doctorId], references: [id])
+  doctorId       String         @db.ObjectId
+
+  createdAt      DateTime       @default(now())
 }

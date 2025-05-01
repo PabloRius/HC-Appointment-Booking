@@ -1,20 +1,15 @@
 "use server";
-import { signIn } from "@/auth";
 
-export const patientLogin = async (id: string, password: string) => {
+import { signIn, signOut } from "@/auth";
+
+export const login = async (id: string, password: string) => {
   await signIn("credentials", {
     id,
     password,
-    userType: "patient",
-    redirectTo: "/dashboard",
+    redirect: false,
   });
 };
 
-export const doctorLogin = async (id: string, password: string) => {
-  await signIn("credentials", {
-    id,
-    password,
-    userType: "doctor",
-    redirectTo: "/dashboard",
-  });
+export const logout = async () => {
+  await signOut({ redirect: false });
 };

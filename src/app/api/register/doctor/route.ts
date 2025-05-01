@@ -1,5 +1,5 @@
 import prisma from "@/prisma";
-import { RegisterSchema } from "@/schemas";
+import { DoctorRegisterSchema } from "@/schemas";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 
@@ -7,7 +7,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    const validatedFields = RegisterSchema.safeParse(body);
+    const validatedFields = DoctorRegisterSchema.safeParse(body);
 
     if (!validatedFields.success) {
       const errors = validatedFields.error.flatten().fieldErrors;
@@ -28,19 +28,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const {
-      nationalId,
-      password,
-      name,
-      email,
-      phone,
-      dateOfBirth,
-      gender,
-      address,
-    } = validatedFields.data;
+    const { Id, password, name, email, phone, gender } = validatedFields.data;
 
     const existingUser = await prisma.user.findUnique({
-      where: { loginId: nationalId },
+      where: { loginId: Id },
     });
 
     if (existingUser) {
@@ -54,21 +45,19 @@ export async function POST(request: Request) {
 
     const newUser = await prisma.user.create({
       data: {
-        loginId: nationalId,
+        loginId: Id,
         password: hashedPassword,
-        role: "patient",
+        role: "doctor",
       },
     });
 
-    await prisma.patientProfile.create({
+    await prisma.doctorProfile.create({
       data: {
         userId: newUser.id,
         name,
         email,
         phone: `${phone.prefix}${phone.number}`,
-        dateOfBirth: new Date(dateOfBirth),
         gender,
-        address,
       },
     });
 

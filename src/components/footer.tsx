@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 export const Footer = () => {
   return (
     <footer className="border-t bg-gray-50">
@@ -26,23 +24,6 @@ export const Footer = () => {
             Connecting patients and healthcare professionals for better
             healthcare management.
           </p>
-        </div>
-        <div className="flex flex-col gap-2 md:gap-4">
-          <h3 className="text-lg font-medium">Quick Links</h3>
-          <nav className="flex flex-col gap-2">
-            <Link href="#" className="text-sm hover:underline">
-              About Us
-            </Link>
-            <Link href="#" className="text-sm hover:underline">
-              Contact
-            </Link>
-            <Link href="#" className="text-sm hover:underline">
-              Privacy Policy
-            </Link>
-            <Link href="#" className="text-sm hover:underline">
-              Terms of Service
-            </Link>
-          </nav>
         </div>
       </div>
       <p className="border-t p-6 text-center text-sm text-gray-500 md:text-left">

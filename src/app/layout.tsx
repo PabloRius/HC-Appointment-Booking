@@ -1,5 +1,4 @@
-import { Footer } from "@/components/footer";
-import { Header } from "@/components/header";
+import { ProfileProvider } from "@/providers/profile-provider";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -22,13 +21,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full">
-      <body
-        className={`${inter.variable} font-sans bg-gray-50 h-full min-h-screen flex flex-col`}
-      >
-        <Header />
-        <main className="flex flex-1 w-full relative">{children}</main>
-        <Footer />
-      </body>
+      <ProfileProvider>
+        <body
+          className={`${inter.variable} font-sans bg-gray-50 h-full min-h-screen flex flex-col`}
+        >
+          {children}
+        </body>
+      </ProfileProvider>
     </html>
   );
 }
