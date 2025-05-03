@@ -58,10 +58,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     fetchProfile();
   }, []);
 
-  useEffect(() => {
-    console.log(profile);
-  }, [profile]);
-
   return (
     <ProfileContext.Provider
       value={{

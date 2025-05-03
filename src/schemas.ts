@@ -70,4 +70,5 @@ export const DoctorRegisterSchema = z.object({
       .regex(/^\d+$/, "Phone number must contain only digits"),
   }),
   gender: z.enum(["male", "female", "other"]),
+  specialty: z.string().min(1),
 });

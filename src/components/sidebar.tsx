@@ -17,7 +17,7 @@ export const AppSidebar = () => {
   const { profile, logout } = useProfile();
   const { role } = profile!;
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" className="z-0">
       <SidebarHeader className="border-b p-4 h-16 overflow-x-hidden">
         <div className="flex items-center gap-2">
           <svg
@@ -54,7 +54,7 @@ export const AppSidebar = () => {
                   role === "patient"
                     ? "/dashboard/appointments"
                     : role === "doctor"
-                    ? "/dashboard/schedule"
+                    ? "/dashboard/availability"
                     : "/dashboard"
                 }
               >

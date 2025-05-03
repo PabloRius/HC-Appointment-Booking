@@ -17,6 +17,7 @@ import {
   PatientProfilePayload,
 } from "@/types/prisma-payloads";
 import { TabsContent } from "@radix-ui/react-tabs";
+import { endOfDay } from "date-fns";
 import { Calendar, Clock, Loader2, Plus, Search, User } from "lucide-react";
 import Link from "next/link";
 
@@ -39,14 +40,14 @@ function PatientDashboard({ profile }: { profile: PatientProfilePayload }) {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Patient Dashboard</h1>
         <Button className="bg-teal-600 hover:bg-teal-700" asChild>
-          <Link href="/patient/appointments/new">
+          <Link href="dashboard/appointments/new">
             <Plus className="mr-2 h-4 w-4" />
             New Appointment
           </Link>
         </Button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle>Upcoming Appointments</CardTitle>
@@ -76,16 +77,16 @@ function PatientDashboard({ profile }: { profile: PatientProfilePayload }) {
               {appointments.length > 0 ? (
                 <div className="space-y-2">
                   <div className="text-lg font-medium">
-                    {appointments[0].timeslot.doctor.name}
+                    {appointments[0].doctor.name}
                   </div>
                   {/* <div className="text-sm text-muted-foreground">{upcomiappointmentsngAppointments[0].specialty}</div> */}
                   <div className="flex items-center text-sm">
                     <Calendar className="mr-2 h-4 w-4 text-teal-600" />
-                    {appointments[0].timeslot.startTime.getDate()}
+                    {appointments[0].startTime.getDate()}
                   </div>
                   <div className="flex items-center text-sm">
                     <Clock className="mr-2 h-4 w-4 text-teal-600" />
-                    {appointments[0].timeslot.startTime.getHours()}
+                    {appointments[0].startTime.getHours()}
                   </div>
                 </div>
               ) : (
@@ -147,9 +148,7 @@ function PatientDashboard({ profile }: { profile: PatientProfilePayload }) {
                 <CardContent className="p-6">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                     <div className="space-y-1">
-                      <h3 className="font-medium">
-                        {appointment.timeslot.doctor.name}
-                      </h3>
+                      <h3 className="font-medium">{appointment.doctor.name}</h3>
                       {/* <p className="text-sm text-muted-foreground">{appointment.specialty}</p> */}
                     </div>
                     <div className="flex items-center gap-4 mt-4 md:mt-0">
@@ -157,13 +156,13 @@ function PatientDashboard({ profile }: { profile: PatientProfilePayload }) {
                         <div className="flex items-center">
                           <Calendar className="mr-2 h-4 w-4 text-teal-600" />
                           <span className="text-sm">
-                            {appointment.timeslot.startTime.getDate()}
+                            {appointment.startTime.getDate()}
                           </span>
                         </div>
                         <div className="flex items-center">
                           <Clock className="mr-2 h-4 w-4 text-teal-600" />
                           <span className="text-sm">
-                            {appointment.timeslot.startTime.getTime()}
+                            {appointment.startTime.getTime()}
                           </span>
                         </div>
                       </div>
@@ -210,24 +209,11 @@ function PatientDashboard({ profile }: { profile: PatientProfilePayload }) {
 }
 
 function DoctorDashboard({ profile }: { profile: DoctorProfilePayload }) {
-  const { timeslots } = profile;
-  const appointments = (
-    timeslots?.map((timeslot) => {
-      if (timeslot.appointment) {
-        return timeslot.appointment;
-      }
-    }) || []
-  ).filter((appointment) => appointment !== undefined);
-  const todayAppointments = (
-    timeslots?.map((timeslot) => {
-      if (
-        timeslot.appointment &&
-        timeslot.startTime.getTime() < new Date().getTime()
-      ) {
-        return timeslot.appointment;
-      }
-    }) || []
-  ).filter((appointment) => appointment !== undefined);
+  const appointments = profile.appointments || [];
+  const todayAppointments =
+    appointments?.filter(
+      (appointment) => appointment.startTime <= endOfDay(new Date())
+    ) || [];
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -278,7 +264,7 @@ function DoctorDashboard({ profile }: { profile: DoctorProfilePayload }) {
                 </div>
                 <div className="flex items-center text-sm">
                   <Clock className="mr-2 h-4 w-4 text-teal-600" />
-                  {todayAppointments[0].timeslot.startTime.getTime()}
+                  {todayAppointments[0].startTime.getTime()}
                 </div>
                 {/* <div className="text-sm text-muted-foreground">
                   {todayAppointments[0].type}
@@ -338,7 +324,7 @@ function DoctorDashboard({ profile }: { profile: DoctorProfilePayload }) {
                         </h4>
                         <div className="flex items-center text-sm text-muted-foreground">
                           <Clock className="mr-1 h-3 w-3" />
-                          {appointment.timeslot.startTime.getTime()}
+                          {appointment.startTime.getTime()}
                         </div>
                       </div>
                     </div>
@@ -392,8 +378,8 @@ function DoctorDashboard({ profile }: { profile: DoctorProfilePayload }) {
                         </h4>
                         <div className="flex items-center text-sm text-muted-foreground">
                           <Calendar className="mr-1 h-3 w-3" />
-                          {appointment.timeslot.startTime.getDay()} at{" "}
-                          {appointment.timeslot.startTime.getHours()} -{" "}
+                          {appointment.startTime.getDay()} at{" "}
+                          {appointment.startTime.getHours()} -{" "}
                         </div>
                       </div>
                     </div>

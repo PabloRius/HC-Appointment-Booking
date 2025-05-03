@@ -28,7 +28,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const { Id, password, name, email, phone, gender } = validatedFields.data;
+    const { Id, password, name, email, phone, gender, specialty } =
+      validatedFields.data;
 
     const existingUser = await prisma.user.findUnique({
       where: { loginId: Id },
@@ -58,6 +59,7 @@ export async function POST(request: Request) {
         email,
         phone: `${phone.prefix}${phone.number}`,
         gender,
+        specialty,
       },
     });
 

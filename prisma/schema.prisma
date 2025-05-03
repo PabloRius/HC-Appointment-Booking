@@ -64,34 +64,28 @@ model DoctorProfile {
   name            String
   phone           String
   gender          String
+  specialty       String
 
-  timeslots       Timeslot[]
+  appointments    Appointment[]
+  availability    DoctorAvailability[]
   createdRecords  EHRRecord[]
 }
 
 model Appointment {
-  id            String          @id @default(auto()) @map("_id") @db.ObjectId
-
-  status        String
-  notes         String?
-
-  timeslot      Timeslot        @relation(fields: [timeslotId], references: [id])
-  timeslotId    String          @unique @db.ObjectId
-
-  patient       PatientProfile  @relation(fields: [patientId], references: [id])
-  patientId     String          @db.ObjectId
-}
-
-model Timeslot {
-  id            String          @id @default(auto()) @map("_id") @db.ObjectId
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  status      String     // "confirmed", "CANCELLED", "COMPLETED"
+  notes       String?
+  startTime   DateTime
+  endTime     DateTime
   
-  startTime     DateTime
-  endTime       DateTime
-
-  appointment   Appointment?
+  doctor      DoctorProfile @relation(fields: [doctorId], references: [id])
+  doctorId    String     @db.ObjectId
   
-  doctor        DoctorProfile   @relation(fields: [doctorId], references: [id])
-  doctorId      String          @db.ObjectId
+  patient     PatientProfile @relation(fields: [patientId], references: [id])
+  patientId   String     @db.ObjectId
+  
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 }
 
 model EHRRecord {
@@ -107,4 +101,44 @@ model EHRRecord {
   doctorId       String         @db.ObjectId
 
   createdAt      DateTime       @default(now())
+}
+
+model DoctorAvailability {
+  id           String        @id @default(auto()) @map("_id") @db.ObjectId
+  doctor       DoctorProfile @relation(fields: [doctorId], references: [id])
+  doctorId     String        @db.ObjectId
+  
+  // Recurring availability pattern
+  dayOfWeek    Int           // 0-6 (Sunday-Saturday)
+  startHour    Int           // 8 for 8:00 AM
+  startMinute  Int           // 0 or 30
+  endHour      Int           // 17 for 5:00 PM
+  endMinute    Int
+  
+  // Recurrence rules
+  isRecurring  Boolean       @default(true)
+  recurrence   String?       // "weekly", "biweekly", "monthly"
+  validFrom    DateTime      @default(now())
+  validUntil   DateTime?     // Null means indefinitely
+  
+  // Exceptions (blocked times)
+  exceptions   Exception[]
+  
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Exception {
+  id           String        @id @default(auto()) @map("_id") @db.ObjectId
+  availability DoctorAvailability @relation(fields: [availabilityId], references: [id])
+  availabilityId String      @db.ObjectId
+  
+  date         DateTime      // Date of exception
+  startTime    DateTime?     // Null means whole day
+  endTime      DateTime?
+  isBlocked    Boolean       @default(true) // false for special availability
+  
+  reason       String?
+  
+  createdAt    DateTime      @default(now())
 }
