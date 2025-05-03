@@ -30,10 +30,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useProfile } from "@/hooks/useProfile";
 import { cn } from "@/lib/utils";
-import { RegisterSchema } from "@/schemas";
+import { DoctorRegisterSchema, RegisterSchema } from "@/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { ArrowLeft, CalendarIcon, Eye, EyeOff, Loader2 } from "lucide-react";
@@ -60,13 +61,15 @@ const countryCodes = [
 
 type FormValues = z.infer<typeof RegisterSchema>;
 
+type DoctorFormValues = z.infer<typeof DoctorRegisterSchema>;
+
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const form = useForm<FormValues>({
+  const patientForm = useForm<FormValues>({
     resolver: zodResolver(RegisterSchema),
     defaultValues: {
       nationalId: "",
@@ -80,6 +83,24 @@ export default function RegisterPage() {
       dateOfBirth: new Date("2000-01-01"),
       gender: "male",
       address: "",
+    },
+    mode: "onBlur",
+    criteriaMode: "all",
+  });
+
+  const doctorForm = useForm<DoctorFormValues>({
+    resolver: zodResolver(DoctorRegisterSchema),
+    defaultValues: {
+      Id: "",
+      password: "",
+      name: "",
+      email: "",
+      phone: {
+        prefix: "+1",
+        number: "",
+      },
+      gender: "male",
+      specialty: "general medicine",
     },
     mode: "onBlur",
     criteriaMode: "all",
@@ -113,7 +134,47 @@ export default function RegisterPage() {
         if (data.errors && typeof data.errors === "object") {
           const fieldErrors = data.errors as Record<string, string>;
           Object.entries(fieldErrors).forEach(([field, message]) => {
-            form.setError(field as keyof FormValues, {
+            patientForm.setError(field as keyof FormValues, {
+              type: "server",
+              message,
+            });
+          });
+        } else if (data.error) {
+          setError(data.error);
+        } else {
+          setError("Registration failed");
+        }
+        return;
+      }
+
+      router.push("/auth/login");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Registration failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const onSubmitDoc = async (values: DoctorFormValues) => {
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/register/doctor", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(values),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.errors && typeof data.errors === "object") {
+          const fieldErrors = data.errors as Record<string, string>;
+          Object.entries(fieldErrors).forEach(([field, message]) => {
+            patientForm.setError(field as keyof FormValues, {
               type: "server",
               message,
             });
@@ -149,125 +210,43 @@ export default function RegisterPage() {
             Create an account
           </h1>
           <p className="text-sm text-muted-foreground">
-            Register as a patient to book appointments with doctors
+            Choose your registration type
           </p>
         </div>
 
-        <Card>
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-4"
-              noValidate // Prevent browser validation
-            >
-              <CardHeader>
-                <CardTitle>Patient Registration</CardTitle>
-                <CardDescription>
-                  Fill in your details to create a patient account
-                </CardDescription>
-              </CardHeader>
+        <Tabs defaultValue="patient" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="patient">Patient</TabsTrigger>
+            <TabsTrigger value="doctor">Doctor</TabsTrigger>
+          </TabsList>
 
-              <CardContent className="space-y-4">
-                {/* Name Field */}
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field, fieldState }) => (
-                    <FormItem>
-                      <FormLabel>Full Name</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="John Doe"
-                          {...field}
-                          aria-invalid={fieldState.invalid}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+          {/* Patient Form */}
+          <TabsContent value="patient">
+            <Card>
+              <Form {...patientForm}>
+                <form
+                  onSubmit={patientForm.handleSubmit(onSubmit)}
+                  className="space-y-4"
+                  noValidate // Prevent browser validation
+                >
+                  <CardHeader>
+                    <CardTitle>Patient Registration</CardTitle>
+                    <CardDescription>
+                      Fill in your details to create a patient account
+                    </CardDescription>
+                  </CardHeader>
 
-                {/* National ID Field */}
-                <FormField
-                  control={form.control}
-                  name="nationalId"
-                  render={({ field, fieldState }) => (
-                    <FormItem>
-                      <FormLabel>National ID</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="123456789"
-                          {...field}
-                          aria-invalid={fieldState.invalid}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Email Field */}
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field, fieldState }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="email"
-                          placeholder="john.doe@example.com"
-                          {...field}
-                          aria-invalid={fieldState.invalid}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Phone Field */}
-                <div className="flex flex-col space-y-2">
-                  <FormLabel>Phone Number</FormLabel>
-                  <div className="flex gap-2">
+                  <CardContent className="space-y-4">
+                    {/* Name Field */}
                     <FormField
-                      control={form.control}
-                      name="phone.prefix"
+                      control={patientForm.control}
+                      name="name"
                       render={({ field, fieldState }) => (
-                        <FormItem className="w-[120px]">
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger aria-invalid={fieldState.invalid}>
-                                <SelectValue placeholder="Code" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {countryCodes.map((country) => (
-                                <SelectItem
-                                  key={country.code}
-                                  value={country.code}
-                                >
-                                  {country.code} {country.country}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="phone.number"
-                      render={({ field, fieldState }) => (
-                        <FormItem className="flex-1">
+                        <FormItem>
+                          <FormLabel>Full Name</FormLabel>
                           <FormControl>
                             <Input
-                              type="tel"
-                              placeholder="123-456-7890"
+                              placeholder="John Doe"
                               {...field}
                               aria-invalid={fieldState.invalid}
                             />
@@ -276,178 +255,506 @@ export default function RegisterPage() {
                         </FormItem>
                       )}
                     />
-                  </div>
-                </div>
 
-                {/* Date of Birth Field */}
-                <FormField
-                  control={form.control}
-                  name="dateOfBirth"
-                  render={({ field, fieldState }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Date of Birth</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
+                    {/* National ID Field */}
+                    <FormField
+                      control={patientForm.control}
+                      name="nationalId"
+                      render={({ field, fieldState }) => (
+                        <FormItem>
+                          <FormLabel>National ID</FormLabel>
                           <FormControl>
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground",
-                                fieldState.invalid && "border-destructive"
-                              )}
+                            <Input
+                              placeholder="123456789"
+                              {...field}
                               aria-invalid={fieldState.invalid}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
+                            />
                           </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) =>
-                              date > new Date() || date < new Date("1900-01-01")
-                            }
-                            initialFocus
-                            captionLayout="dropdown-buttons"
-                            fromYear={1920}
-                            toYear={new Date().getFullYear()}
-                            classNames={{
-                              day_hidden: "invisible",
-                              dropdown:
-                                "px-0 py-1.5 rounded-md bg-popover text-popover-foreground text-sm  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background",
-                              caption_dropdowns: "flex gap-3",
-                              vhidden: "hidden",
-                              caption_label: "hidden",
-                            }}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                {/* Gender Field */}
-                <FormField
-                  control={form.control}
-                  name="gender"
-                  render={({ field, fieldState }) => (
-                    <FormItem>
-                      <FormLabel>Gender</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger aria-invalid={fieldState.invalid}>
-                            <SelectValue placeholder="Select your gender" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="male">Male</SelectItem>
-                          <SelectItem value="female">Female</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    {/* Email Field */}
+                    <FormField
+                      control={patientForm.control}
+                      name="email"
+                      render={({ field, fieldState }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="email"
+                              placeholder="john.doe@example.com"
+                              {...field}
+                              aria-invalid={fieldState.invalid}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                {/* Address Field */}
-                <FormField
-                  control={form.control}
-                  name="address"
-                  render={({ field, fieldState }) => (
-                    <FormItem>
-                      <FormLabel>Address</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Enter your full address"
-                          className="min-h-[80px]"
-                          {...field}
-                          aria-invalid={fieldState.invalid}
+                    {/* Phone Field */}
+                    <div className="flex flex-col space-y-2">
+                      <FormLabel>Phone Number</FormLabel>
+                      <div className="flex gap-2">
+                        <FormField
+                          control={patientForm.control}
+                          name="phone.prefix"
+                          render={({ field, fieldState }) => (
+                            <FormItem className="w-[120px]">
+                              <Select
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                              >
+                                <FormControl>
+                                  <SelectTrigger
+                                    aria-invalid={fieldState.invalid}
+                                  >
+                                    <SelectValue placeholder="Code" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {countryCodes.map((country) => (
+                                    <SelectItem
+                                      key={country.code}
+                                      value={country.code}
+                                    >
+                                      {country.code} {country.country}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
                         />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormField
+                          control={patientForm.control}
+                          name="phone.number"
+                          render={({ field, fieldState }) => (
+                            <FormItem className="flex-1">
+                              <FormControl>
+                                <Input
+                                  type="tel"
+                                  placeholder="123-456-7890"
+                                  {...field}
+                                  aria-invalid={fieldState.invalid}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
 
-                {/* Password Field */}
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field, fieldState }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Input
-                            type={showPassword ? "text" : "password"}
-                            {...field}
-                            aria-invalid={fieldState.invalid}
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="absolute right-0 top-0 h-full px-3"
-                            onClick={() => setShowPassword(!showPassword)}
+                    {/* Date of Birth Field */}
+                    <FormField
+                      control={patientForm.control}
+                      name="dateOfBirth"
+                      render={({ field, fieldState }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Date of Birth</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  className={cn(
+                                    "w-full pl-3 text-left font-normal",
+                                    !field.value && "text-muted-foreground",
+                                    fieldState.invalid && "border-destructive"
+                                  )}
+                                  aria-invalid={fieldState.invalid}
+                                >
+                                  {field.value ? (
+                                    format(field.value, "PPP")
+                                  ) : (
+                                    <span>Pick a date</span>
+                                  )}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent
+                              className="w-auto p-0"
+                              align="start"
+                            >
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                disabled={(date) =>
+                                  date > new Date() ||
+                                  date < new Date("1900-01-01")
+                                }
+                                initialFocus
+                                captionLayout="dropdown-buttons"
+                                fromYear={1920}
+                                toYear={new Date().getFullYear()}
+                                classNames={{
+                                  day_hidden: "invisible",
+                                  dropdown:
+                                    "px-0 py-1.5 rounded-md bg-popover text-popover-foreground text-sm  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background",
+                                  caption_dropdowns: "flex gap-3",
+                                  vhidden: "hidden",
+                                  caption_label: "hidden",
+                                }}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Gender Field */}
+                    <FormField
+                      control={patientForm.control}
+                      name="gender"
+                      render={({ field, fieldState }) => (
+                        <FormItem>
+                          <FormLabel>Gender</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
                           >
-                            {showPassword ? (
-                              <EyeOff className="h-4 w-4" />
-                            ) : (
-                              <Eye className="h-4 w-4" />
-                            )}
-                            <span className="sr-only">
-                              {showPassword ? "Hide password" : "Show password"}
-                            </span>
-                          </Button>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
+                            <FormControl>
+                              <SelectTrigger aria-invalid={fieldState.invalid}>
+                                <SelectValue placeholder="Select your gender" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="male">Male</SelectItem>
+                              <SelectItem value="female">Female</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-              <CardFooter className="flex flex-col space-y-4">
-                {error && (
-                  <p className="text-sm font-medium text-destructive">
-                    {error}
-                  </p>
-                )}
+                    {/* Address Field */}
+                    <FormField
+                      control={patientForm.control}
+                      name="address"
+                      render={({ field, fieldState }) => (
+                        <FormItem>
+                          <FormLabel>Address</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Enter your full address"
+                              className="min-h-[80px]"
+                              {...field}
+                              aria-invalid={fieldState.invalid}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <Button
-                  type="submit"
-                  className="w-full bg-teal-600 hover:bg-teal-700"
-                  disabled={isLoading}
+                    {/* Password Field */}
+                    <FormField
+                      control={patientForm.control}
+                      name="password"
+                      render={({ field, fieldState }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Input
+                                type={showPassword ? "text" : "password"}
+                                {...field}
+                                aria-invalid={fieldState.invalid}
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="absolute right-0 top-0 h-full px-3"
+                                onClick={() => setShowPassword(!showPassword)}
+                              >
+                                {showPassword ? (
+                                  <EyeOff className="h-4 w-4" />
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
+                                <span className="sr-only">
+                                  {showPassword
+                                    ? "Hide password"
+                                    : "Show password"}
+                                </span>
+                              </Button>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </CardContent>
+
+                  <CardFooter className="flex flex-col space-y-4">
+                    {error && (
+                      <p className="text-sm font-medium text-destructive">
+                        {error}
+                      </p>
+                    )}
+
+                    <Button
+                      type="submit"
+                      className="w-full bg-teal-600 hover:bg-teal-700"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Creating account..." : "Create Account"}
+                    </Button>
+
+                    <div className="text-center text-sm">
+                      Already have an account?{" "}
+                      <Link
+                        href="/auth/login"
+                        className="text-teal-600 hover:underline"
+                      >
+                        Sign in
+                      </Link>
+                    </div>
+                  </CardFooter>
+                </form>
+              </Form>
+            </Card>
+          </TabsContent>
+
+          {/* Doctor Form */}
+          <TabsContent value="doctor">
+            <Card>
+              <Form {...doctorForm}>
+                <form
+                  onSubmit={doctorForm.handleSubmit(onSubmitDoc)}
+                  className="space-y-4"
                 >
-                  {isLoading ? "Creating account..." : "Create Account"}
-                </Button>
+                  <CardHeader>
+                    <CardTitle>Doctor Registration</CardTitle>
+                    <CardDescription>
+                      Fill in your details to create a doctor account
+                    </CardDescription>
+                  </CardHeader>
 
-                <div className="text-center text-sm">
-                  Already have an account?{" "}
-                  <Link
-                    href="/auth/login"
-                    className="text-teal-600 hover:underline"
-                  >
-                    Sign in
-                  </Link>
-                </div>
-              </CardFooter>
-            </form>
-          </Form>
-        </Card>
+                  <CardContent className="space-y-4">
+                    {/* Medical License Id */}
+                    <FormField
+                      control={doctorForm.control}
+                      name="Id"
+                      render={({ field, fieldState }) => (
+                        <FormItem>
+                          <FormLabel>Medical License ID</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="e.g., GMC-123456"
+                              {...field}
+                              aria-invalid={fieldState.invalid}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Name */}
+                    <FormField
+                      control={doctorForm.control}
+                      name="name"
+                      render={({ field, fieldState }) => (
+                        <FormItem>
+                          <FormLabel>Full Name</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Your name"
+                              {...field}
+                              aria-invalid={fieldState.invalid}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Email */}
+                    <FormField
+                      control={doctorForm.control}
+                      name="email"
+                      render={({ field, fieldState }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="email"
+                              placeholder="you@example.com"
+                              {...field}
+                              aria-invalid={fieldState.invalid}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Phone Number (prefix + number) */}
+                    <div className="flex flex-col space-y-2">
+                      <FormLabel>Phone Number</FormLabel>
+                      <div className="flex gap-2">
+                        <FormField
+                          control={doctorForm.control}
+                          name="phone.prefix"
+                          render={({ field, fieldState }) => (
+                            <FormItem className="w-[120px]">
+                              <Select
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                              >
+                                <FormControl>
+                                  <SelectTrigger
+                                    aria-invalid={fieldState.invalid}
+                                  >
+                                    <SelectValue placeholder="Code" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {countryCodes.map((country) => (
+                                    <SelectItem
+                                      key={country.code}
+                                      value={country.code}
+                                    >
+                                      {country.code} {country.country}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={doctorForm.control}
+                          name="phone.number"
+                          render={({ field, fieldState }) => (
+                            <FormItem className="flex-1">
+                              <FormControl>
+                                <Input
+                                  type="tel"
+                                  placeholder="123-456-7890"
+                                  {...field}
+                                  aria-invalid={fieldState.invalid}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Specialty */}
+                    <FormField
+                      control={doctorForm.control}
+                      name="specialty"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Specialty</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select specialty" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="General medicine">
+                                General medicine
+                              </SelectItem>
+                              <SelectItem value="Neurology">
+                                Neurology
+                              </SelectItem>
+                              <SelectItem value="Orthodoncy">
+                                Orthodoncy
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Gender */}
+                    <FormField
+                      control={doctorForm.control}
+                      name="gender"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Gender</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select gender" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="male">Male</SelectItem>
+                              <SelectItem value="female">Female</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Password */}
+                    <FormField
+                      control={doctorForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="password"
+                              placeholder="********"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </CardContent>
+
+                  <CardFooter className="flex flex-col space-y-4">
+                    {error && (
+                      <p className="text-sm font-medium text-destructive">
+                        {error}
+                      </p>
+                    )}
+                    <Button
+                      type="submit"
+                      className="w-full bg-teal-600 hover:bg-teal-700"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Creating account..." : "Create Account"}
+                    </Button>
+                  </CardFooter>
+                </form>
+              </Form>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
