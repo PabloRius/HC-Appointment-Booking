@@ -119,7 +119,7 @@ function PatientDashboard({ profile }: { profile: PatientProfilePayload }) {
                 className="w-full justify-start"
                 asChild
               >
-                <Link href="/patient/appointments/new">
+                <Link href="dashboard/appointments/new">
                   <Plus className="mr-2 h-4 w-4" />
                   Book New Appointment
                 </Link>
@@ -195,7 +195,7 @@ function PatientDashboard({ profile }: { profile: PatientProfilePayload }) {
                 You have no upcoming appointments
               </p>
               <Button className="mt-4 bg-teal-600 hover:bg-teal-700" asChild>
-                <Link href="/patient/appointments/new">
+                <Link href="dashboard/appointments/new">
                   <Plus className="mr-2 h-4 w-4" />
                   Book an Appointment
                 </Link>
