@@ -121,6 +121,7 @@ export function DoctorAvailabilityCalendar({ doctorId }: { doctorId: string }) {
 
   const handleSubmit = async () => {
     const payload = {
+      id: currentAvailability!.id,
       doctorId,
       dayOfWeek: selectedDate?.getDay(),
       startTime: `${format(selectedDate!, "yyyy-MM-dd")}T${startTime}:00`,
@@ -132,11 +133,8 @@ export function DoctorAvailabilityCalendar({ doctorId }: { doctorId: string }) {
     };
 
     const method = isEditing ? "PUT" : "POST";
-    const url = isEditing
-      ? `/api/availability/${currentAvailability!.id}`
-      : "/api/availability";
 
-    const res = await fetch(url, {
+    const res = await fetch("/api/availability", {
       method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

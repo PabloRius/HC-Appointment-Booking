@@ -82,9 +82,9 @@ export default function LoginPage() {
           <form onSubmit={form.handleSubmit(handleSubmit)}>
             <Card>
               <CardHeader>
-                <CardTitle>Patient Login</CardTitle>
+                <CardTitle>Login to your account</CardTitle>
                 <CardDescription>
-                  Access your patient portal to manage appointments
+                  Access your personal dashboard
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -93,7 +93,7 @@ export default function LoginPage() {
                   name="id"
                   render={({ field }) => (
                     <FormItem>
-                      <Label htmlFor="patient-national-id">National ID</Label>
+                      <Label htmlFor="patient-national-id">ID</Label>
                       <FormControl>
                         <Input
                           id="patient-national-id"
