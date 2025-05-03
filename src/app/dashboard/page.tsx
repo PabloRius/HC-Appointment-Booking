@@ -9,7 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProfile } from "@/hooks/useProfile";
 import {
@@ -18,7 +17,7 @@ import {
 } from "@/types/prisma-payloads";
 import { TabsContent } from "@radix-ui/react-tabs";
 import { endOfDay } from "date-fns";
-import { Calendar, Clock, Loader2, Plus, Search, User } from "lucide-react";
+import { Calendar, Clock, Loader2, Plus, User } from "lucide-react";
 import Link from "next/link";
 
 export default function Page() {
@@ -218,16 +217,6 @@ function DoctorDashboard({ profile }: { profile: DoctorProfilePayload }) {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 className="text-3xl font-bold">Doctor Dashboard</h1>
-        <div className="flex gap-4">
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search patients..."
-              className="w-full pl-8"
-            />
-          </div>
-        </div>
       </div>
 
       <div className="grid gap-6 sm:grid-cols-2">

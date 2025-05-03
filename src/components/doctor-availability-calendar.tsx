@@ -7,26 +7,21 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { DoctorAvailability } from "@prisma/client";
 import {
   addMonths,
   eachDayOfInterval,
   endOfMonth,
+  endOfWeek,
   format,
   isSameDay,
   isSameMonth,
   startOfMonth,
+  startOfWeek,
 } from "date-fns";
 import { Edit, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { AvailabilityForm } from "./availability-form";
 
 const daysOfWeek = [
   "Sunday",
@@ -59,6 +54,9 @@ export function DoctorAvailabilityCalendar({ doctorId }: { doctorId: string }) {
   const [availability, setAvailability] = useState<DoctorAvailability[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [dayAvailabilities, setDayAvailabilities] = useState<
+    DoctorAvailability[]
+  >([]);
   const [currentAvailability, setCurrentAvailability] =
     useState<DoctorAvailability | null>(null);
 
@@ -89,10 +87,19 @@ export function DoctorAvailabilityCalendar({ doctorId }: { doctorId: string }) {
   // Calendar rendering
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
-  const calendarDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 });
+  const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
+  const calendarDays = eachDayOfInterval({
+    start: calendarStart,
+    end: calendarEnd,
+  });
 
   const handleDateClick = (day: Date) => {
     setSelectedDate(day);
+    const dayAvailabilities = availability.filter((avail) => {
+      return !avail.isRecurring && isSameDay(avail.validFrom, day);
+    });
+    setDayAvailabilities(dayAvailabilities);
     setIsDialogOpen(true);
     setIsEditing(false);
     setCurrentAvailability(null);
@@ -113,7 +120,6 @@ export function DoctorAvailabilityCalendar({ doctorId }: { doctorId: string }) {
   };
 
   const handleSubmit = async () => {
-    if (!currentAvailability) return;
     const payload = {
       doctorId,
       dayOfWeek: selectedDate?.getDay(),
@@ -127,7 +133,7 @@ export function DoctorAvailabilityCalendar({ doctorId }: { doctorId: string }) {
 
     const method = isEditing ? "PUT" : "POST";
     const url = isEditing
-      ? `/api/availability/${currentAvailability.id}`
+      ? `/api/availability/${currentAvailability!.id}`
       : "/api/availability";
 
     const res = await fetch(url, {
@@ -203,7 +209,6 @@ export function DoctorAvailabilityCalendar({ doctorId }: { doctorId: string }) {
             if (avail.isRecurring) {
               return false;
             } else {
-              console.log(avail.validFrom, day);
               if (isSameDay(avail.validFrom, day)) {
                 return true;
               }
@@ -224,28 +229,15 @@ export function DoctorAvailabilityCalendar({ doctorId }: { doctorId: string }) {
             >
               <div className="flex justify-between">
                 <span className="text-sm font-medium">{format(day, "d")}</span>
+              </div>
+
+              <div className="mt-1 space-y-1">
                 {dayAvailabilities.length > 0 && (
                   <span className="text-xs text-teal-600">
                     {dayAvailabilities.length} slot
                     {dayAvailabilities.length !== 1 ? "s" : ""}
                   </span>
                 )}
-              </div>
-
-              <div className="mt-1 space-y-1">
-                {dayAvailabilities.map((avail) => (
-                  <div
-                    key={avail.id}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleAvailabilityClick(avail, day);
-                    }}
-                    className="text-xs p-1 bg-teal-100 text-teal-800 rounded cursor-pointer hover:bg-teal-200"
-                  >
-                    {`${avail.startHour}:${avail.startMinute}`} -{" "}
-                    {`${avail.endHour}:${avail.endMinute}`}
-                  </div>
-                ))}
               </div>
             </div>
           );
@@ -257,119 +249,79 @@ export function DoctorAvailabilityCalendar({ doctorId }: { doctorId: string }) {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {isEditing ? "Edit Availability" : "Add New Availability"}
+              {isEditing ? "Edit Availability" : "Manage Availabilities"}
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Date</label>
-              <Input
-                type="date"
-                value={selectedDate ? format(selectedDate, "yyyy-MM-dd") : ""}
-                disabled
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
+            {dayAvailabilities.length > 0 && !isEditing ? (
               <div>
-                <label className="block text-sm font-medium mb-1">
-                  Start Time
-                </label>
-                <Input
-                  type="time"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  End Time
-                </label>
-                <Input
-                  type="time"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="recurring"
-                checked={isRecurring}
-                onChange={(e) => setIsRecurring(e.target.checked)}
-                className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
-              />
-              <label htmlFor="recurring" className="text-sm font-medium">
-                Recurring
-              </label>
-            </div>
-
-            {isRecurring && (
-              <div className="space-y-2">
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Recurrence
-                  </label>
-                  <Select value={recurrence} onValueChange={setRecurrence}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select recurrence" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="weekly">Weekly</SelectItem>
-                      <SelectItem value="biweekly">Bi-weekly</SelectItem>
-                      <SelectItem value="monthly">Monthly</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Valid Until (optional)
-                  </label>
-                  <Input
-                    type="date"
-                    value={validUntil}
-                    onChange={(e) => setValidUntil(e.target.value)}
-                  />
-                </div>
-              </div>
-            )}
-
-            <div className="flex justify-end space-x-2 pt-4">
-              {isEditing && (
-                <Button
-                  variant="destructive"
-                  onClick={handleDelete}
-                  className="mr-auto"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
-                </Button>
-              )}
-
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button
-                onClick={handleSubmit}
-                className="bg-teal-600 hover:bg-teal-700"
-              >
-                {isEditing ? (
-                  <>
-                    <Edit className="h-4 w-4 mr-2" />
-                    Update
-                  </>
-                ) : (
-                  <>
+                <ul className="space-y-2">
+                  {dayAvailabilities.map((avail) => (
+                    <li
+                      key={avail.id}
+                      className="flex justify-between items-center"
+                    >
+                      <span>
+                        {`${String(avail.startHour).padStart(2, "0")}:${String(
+                          avail.startMinute
+                        ).padStart(2, "0")} - ${String(avail.endHour).padStart(
+                          2,
+                          "0"
+                        )}:${String(avail.endMinute).padStart(2, "0")}`}
+                      </span>
+                      <div className="space-x-2">
+                        <Button
+                          size="sm"
+                          onClick={() =>
+                            handleAvailabilityClick(avail, selectedDate!)
+                          }
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          // onClick={() => handleDeleteAvailability(avail.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+                <div className="pt-4">
+                  <Button
+                    onClick={() => {
+                      setIsEditing(false);
+                      setCurrentAvailability(null);
+                    }}
+                    className="bg-teal-600 hover:bg-teal-700"
+                  >
                     <Plus className="h-4 w-4 mr-2" />
-                    Add
-                  </>
-                )}
-              </Button>
-            </div>
+                    Add New Availability
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              // Existing form for adding or editing availability
+              <AvailabilityForm
+                startTime={startTime}
+                endTime={endTime}
+                isRecurring={isRecurring}
+                recurrence={recurrence}
+                validUntil={validUntil}
+                setStartTime={setStartTime}
+                setEndTime={setEndTime}
+                setIsRecurring={setIsRecurring}
+                setRecurrence={setRecurrence}
+                setValidUntil={setValidUntil}
+                handleSubmit={handleSubmit}
+                handleDelete={handleDelete}
+                isEditing={isEditing}
+                setIsDialogOpen={setIsDialogOpen}
+              />
+            )}
           </div>
         </DialogContent>
       </Dialog>

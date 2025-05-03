@@ -42,18 +42,97 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    const isRecurring = body.isRecurring;
+    const doctorId = body.doctorId;
+    const validFrom = new Date(body.validFrom);
+    const startHour = new Date(body.startTime).getHours();
+    const startMinute = new Date(body.startTime).getMinutes();
+    const endHour = new Date(body.endTime).getHours();
+    const endMinute = new Date(body.endTime).getMinutes();
+
+    if (!isRecurring) {
+      const conflictingSlots = await prisma.doctorAvailability.findMany({
+        where: {
+          doctorId,
+          validFrom,
+          isRecurring,
+          OR: [
+            {
+              AND: [
+                {
+                  OR: [
+                    {
+                      startHour: { lt: startHour },
+                    },
+                    {
+                      startHour: { equals: startHour },
+                      startMinute: { lte: startMinute },
+                    },
+                  ],
+                },
+                {
+                  OR: [
+                    {
+                      endHour: { gt: startHour },
+                    },
+                    {
+                      endHour: { equals: startHour },
+                      endMinute: { gt: startMinute },
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              AND: [
+                {
+                  OR: [
+                    {
+                      startHour: { lt: endHour },
+                    },
+                    {
+                      startHour: { equals: endHour },
+                      startMinute: { lt: endMinute },
+                    },
+                  ],
+                },
+                {
+                  OR: [
+                    {
+                      endHour: { gt: endHour },
+                    },
+                    {
+                      endHour: { equals: endHour },
+                      endMinute: { gte: endMinute },
+                    },
+                  ],
+                },
+              ],
+            },
+            { startHour, startMinute },
+          ],
+        },
+      });
+
+      if (conflictingSlots.length > 0) {
+        return NextResponse.json(
+          { error: "Record with similar timeslots already exists." },
+          { status: 400 }
+        );
+      }
+    }
 
     const result = await prisma.doctorAvailability.create({
       data: {
-        doctorId: body.doctorId,
+        doctorId,
         dayOfWeek: body.dayOfWeek,
-        startHour: new Date(body.startTime).getHours(),
-        startMinute: new Date(body.startTime).getMinutes(),
+        startHour,
+        startMinute,
         endHour: new Date(body.endTime).getHours(),
         endMinute: new Date(body.endTime).getMinutes(),
-        isRecurring: body.isRecurring,
+        isRecurring,
         recurrence: body.recurrence,
-        validFrom: new Date(body.validFrom),
+        validFrom,
         validUntil: body.validUntil ? new Date(body.validUntil) : null,
       },
       include: { exceptions: true },
