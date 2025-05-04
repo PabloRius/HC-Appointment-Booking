@@ -128,7 +128,11 @@ function PatientDashboard({ profile }: { profile: PatientProfilePayload }) {
             {appointments.map((appointment) => {
               const date = new Date(appointment.startTime);
               const fullDate = date.toISOString().split("T")[0];
-              const fullTime = `${date.getHours()}:${date.getMinutes()}`;
+              const fullTime = `${String(date.getHours()).padStart(
+                2,
+                "0"
+              )}:${String(date.getMinutes()).padStart(2, "0")}`;
+
               return (
                 <Card key={appointment.id}>
                   <CardContent className="p-6">
