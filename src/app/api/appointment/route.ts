@@ -3,45 +3,6 @@ import { appointmentSchema } from "@/schemas";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-export async function GET(req: Request) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const includePast = searchParams.get("includePast") === "true";
-    const now = new Date();
-    console.log(now);
-
-    const appointments = await prisma.appointment.findMany({
-      where: {
-        startTime: includePast ? undefined : { gte: now },
-      },
-      orderBy: {
-        startTime: "asc",
-      },
-      include: {
-        doctor: {
-          select: {
-            name: true,
-            specialty: true,
-          },
-        },
-        patient: {
-          select: {
-            name: true,
-          },
-        },
-      },
-    });
-
-    return NextResponse.json(appointments);
-  } catch (error) {
-    console.error("Error fetching appointments:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
-  }
-}
-
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -83,6 +44,46 @@ export async function POST(req: Request) {
       );
     }
 
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const appointmentId = searchParams.get("id");
+
+    if (!appointmentId) {
+      return NextResponse.json(
+        { error: "Appointment ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const existingAppointment = await prisma.appointment.findUnique({
+      where: { id: appointmentId },
+    });
+
+    if (!existingAppointment) {
+      return NextResponse.json(
+        { error: "Appointment not found" },
+        { status: 404 }
+      );
+    }
+
+    await prisma.appointment.delete({
+      where: { id: appointmentId },
+    });
+
+    return NextResponse.json(
+      { message: "Appointment deleted successfully" },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error deleting appointment:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }

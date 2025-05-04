@@ -33,12 +33,29 @@ export default function Page() {
 
 function PatientDashboard({ profile }: { profile: PatientProfilePayload }) {
   const { appointments } = profile;
+  const { refetch } = useProfile();
 
-  const date = new Date(appointments[0].startTime);
-  const fullDate = date.toISOString().split("T")[0];
-  const fullTime = `${String(date.getHours()).padStart(2, "0")}:${String(
-    date.getMinutes()
-  ).padStart(2, "0")}`;
+  const date = appointments[0]
+    ? new Date(appointments[0].startTime)
+    : undefined;
+  const fullDate = date ? date.toISOString().split("T")[0] : undefined;
+  const fullTime = date
+    ? `${String(date?.getHours()).padStart(2, "0")}:${String(
+        date?.getMinutes()
+      ).padStart(2, "0")}`
+    : "";
+
+  const handleCancel = async (id: string) => {
+    try {
+      window.confirm(
+        "Please confirm the following action before proceeding: CANCEL THE APPOINTMENT"
+      );
+      await fetch(`/api/appointment?id=${id}`, { method: "DELETE" });
+      refetch();
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -163,12 +180,14 @@ function PatientDashboard({ profile }: { profile: PatientProfilePayload }) {
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm" asChild>
-                            <Link
-                              href={`/patient/appointments/${appointment.id}/edit`}
-                            >
-                              Edit
-                            </Link>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => {
+                              handleCancel(appointment.id);
+                            }}
+                          >
+                            Cancel
                           </Button>
                         </div>
                       </div>
