@@ -62,7 +62,7 @@ export function DoctorAvailabilityCalendar({ doctorId }: { doctorId: string }) {
 
   // Form state
   const [startTime, setStartTime] = useState("09:00");
-  const [endTime, setEndTime] = useState("17:00");
+  const [endTime, setEndTime] = useState("09:30");
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurrence, setRecurrence] = useState("weekly");
   const [validUntil, setValidUntil] = useState("");
@@ -111,9 +111,16 @@ export function DoctorAvailabilityCalendar({ doctorId }: { doctorId: string }) {
     setIsEditing(true);
     setIsDialogOpen(true);
 
-    // Pre-fill form with existing data
-    setStartTime(`${avail.startHour}:${avail.startMinute}`);
-    setEndTime(`${avail.endHour}:${avail.endMinute}`);
+    setStartTime(
+      `${String(avail.startHour).padStart(2, "0")}:${String(
+        avail.startMinute
+      ).padStart(2, "0")}`
+    );
+    setEndTime(
+      `${String(avail.endHour).padStart(2, "0")}:${String(
+        avail.endMinute
+      ).padStart(2, "0")}`
+    );
     setIsRecurring(avail.isRecurring);
     setRecurrence(avail.recurrence || "weekly");
     setValidUntil(avail.validUntil?.toISOString() || "");
@@ -121,11 +128,10 @@ export function DoctorAvailabilityCalendar({ doctorId }: { doctorId: string }) {
 
   const handleSubmit = async () => {
     const payload = {
-      id: currentAvailability!.id,
       doctorId,
       dayOfWeek: selectedDate?.getDay(),
-      startTime: `${format(selectedDate!, "yyyy-MM-dd")}T${startTime}:00`,
-      endTime: `${format(selectedDate!, "yyyy-MM-dd")}T${endTime}:00`,
+      startTime: `${format(selectedDate!, "yyyy-MM-dd")}T${startTime}`,
+      endTime: `${format(selectedDate!, "yyyy-MM-dd")}T${endTime}`,
       isRecurring,
       recurrence: isRecurring ? recurrence : null,
       validFrom: format(selectedDate!, "yyyy-MM-dd"),
@@ -137,7 +143,9 @@ export function DoctorAvailabilityCalendar({ doctorId }: { doctorId: string }) {
     const res = await fetch("/api/availability", {
       method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: isEditing
+        ? JSON.stringify({ ...payload, id: currentAvailability!.id })
+        : JSON.stringify(payload),
     });
 
     if (res.ok) {
@@ -152,10 +160,8 @@ export function DoctorAvailabilityCalendar({ doctorId }: { doctorId: string }) {
     }
   };
 
-  const handleDelete = async () => {
-    if (!currentAvailability) return;
-
-    const res = await fetch(`/api/availability/${currentAvailability.id}`, {
+  const handleDelete = async (availId: string) => {
+    const res = await fetch(`/api/availability?id=${availId}`, {
       method: "DELETE",
     });
 
@@ -280,7 +286,7 @@ export function DoctorAvailabilityCalendar({ doctorId }: { doctorId: string }) {
                         <Button
                           size="sm"
                           variant="destructive"
-                          // onClick={() => handleDeleteAvailability(avail.id)}
+                          onClick={() => handleDelete(avail.id)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -304,6 +310,7 @@ export function DoctorAvailabilityCalendar({ doctorId }: { doctorId: string }) {
             ) : (
               // Existing form for adding or editing availability
               <AvailabilityForm
+                id={currentAvailability?.id}
                 startTime={startTime}
                 endTime={endTime}
                 isRecurring={isRecurring}

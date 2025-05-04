@@ -10,6 +10,7 @@ import {
 import { Edit, Plus, Trash2 } from "lucide-react";
 
 interface AvailabilityFormProps {
+  id: string | undefined;
   startTime: string;
   endTime: string;
   isRecurring: boolean;
@@ -21,12 +22,13 @@ interface AvailabilityFormProps {
   setRecurrence: (val: string) => void;
   setValidUntil: (val: string) => void;
   handleSubmit: () => void;
-  handleDelete: () => void;
+  handleDelete: (availId: string) => void;
   isEditing: boolean;
   setIsDialogOpen: (val: boolean) => void;
 }
 
 export function AvailabilityForm({
+  id,
   startTime,
   endTime,
   isRecurring,
@@ -117,7 +119,9 @@ export function AvailabilityForm({
         {isEditing && (
           <Button
             variant="destructive"
-            onClick={handleDelete}
+            onClick={() => {
+              if (id) handleDelete(id);
+            }}
             className="mr-auto"
           >
             <Trash2 className="h-4 w-4 mr-2" />

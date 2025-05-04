@@ -184,3 +184,44 @@ export async function PUT(request: Request) {
     );
   }
 }
+
+// PUT - Delete availability
+export async function DELETE(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const availabilityId = searchParams.get("id");
+
+    if (!availabilityId) {
+      return NextResponse.json(
+        { error: "Availability ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const existingAvailability = await prisma.doctorAvailability.findUnique({
+      where: { id: availabilityId },
+    });
+
+    if (!existingAvailability) {
+      return NextResponse.json(
+        { error: "Availability not found" },
+        { status: 404 }
+      );
+    }
+
+    await prisma.doctorAvailability.delete({
+      where: { id: availabilityId },
+    });
+
+    return NextResponse.json(
+      { message: "Availability deleted successfully" },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error deleting availability:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
+}
