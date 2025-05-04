@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useProfile } from "@/hooks/useProfile";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/router";
 
 export default function AppointmentSummary({
   doctor,
@@ -21,6 +21,7 @@ export default function AppointmentSummary({
 }) {
   const [notes, setNotes] = useState("");
   const { profile } = useProfile();
+  const router = useRouter();
 
   const handleConfirm = async () => {
     try {
@@ -34,7 +35,7 @@ export default function AppointmentSummary({
           patientId: profile?.id,
         }),
       });
-      redirect("/dashboard");
+      router.push("/dashboard");
     } catch (error) {
       console.error(error);
     }

@@ -34,6 +34,12 @@ export default function Page() {
 function PatientDashboard({ profile }: { profile: PatientProfilePayload }) {
   const { appointments } = profile;
 
+  const date = new Date(appointments[0].startTime);
+  const fullDate = date.toISOString().split("T")[0];
+  const fullTime = `${String(date.getHours()).padStart(2, "0")}:${String(
+    date.getMinutes()
+  ).padStart(2, "0")}`;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -59,16 +65,16 @@ function PatientDashboard({ profile }: { profile: PatientProfilePayload }) {
                   <div className="text-lg font-medium">
                     {appointments[0].doctor.name}
                   </div>
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-sm text-muted-foreground capitalize">
                     {appointments[0].doctor.specialty}
                   </div>
                   <div className="flex items-center text-sm">
                     <Calendar className="mr-2 h-4 w-4 text-teal-600" />
-                    {new Date(String(appointments[0].startTime)).toISOString()}
+                    {fullDate}
                   </div>
                   <div className="flex items-center text-sm">
                     <Clock className="mr-2 h-4 w-4 text-teal-600" />
-                    {new Date(String(appointments[0].startTime)).toISOString()}
+                    {fullTime}
                   </div>
                 </div>
               ) : (
@@ -141,7 +147,7 @@ function PatientDashboard({ profile }: { profile: PatientProfilePayload }) {
                         <h3 className="font-medium">
                           {appointment.doctor.name}
                         </h3>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-muted-foreground capitalize">
                           {appointment.doctor.specialty}
                         </p>
                       </div>
@@ -157,13 +163,6 @@ function PatientDashboard({ profile }: { profile: PatientProfilePayload }) {
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm" asChild>
-                            <Link
-                              href={`/patient/appointments/${appointment.id}`}
-                            >
-                              View
-                            </Link>
-                          </Button>
                           <Button variant="outline" size="sm" asChild>
                             <Link
                               href={`/patient/appointments/${appointment.id}/edit`}

@@ -20,10 +20,16 @@ export async function GET() {
   }
 
   const { id: profileId, role } = user;
+  const now = new Date();
   if (role === "patient") {
     const patientProfile = await prisma.patientProfile.findUnique({
       where: { userId: profileId },
-      include: { appointments: { include: { doctor: true } } },
+      include: {
+        appointments: {
+          include: { doctor: true },
+          where: { startTime: { gte: now } },
+        },
+      },
     });
 
     if (!patientProfile) {
@@ -39,6 +45,7 @@ export async function GET() {
   if (role === "doctor") {
     const doctorProfile = await prisma.doctorProfile.findUnique({
       where: { userId: profileId },
+      include: { appointments: { where: { startTime: { gte: now } } } },
     });
 
     if (!doctorProfile) {
