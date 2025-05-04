@@ -47,25 +47,6 @@ function PatientDashboard({ profile }: { profile: PatientProfilePayload }) {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle>Upcoming Appointments</CardTitle>
-            <CardDescription>
-              You have {appointments?.length || 0} upcoming appointments
-            </CardDescription>
-          </CardHeader>
-          {appointments && (
-            <CardFooter>
-              <Button variant="outline" size="sm" asChild>
-                <Link href="/patient/appointments">
-                  <Calendar className="mr-2 h-4 w-4" />
-                  View All
-                </Link>
-              </Button>
-            </CardFooter>
-          )}
-        </Card>
-
         {appointments && (
           <Card>
             <CardHeader className="pb-2">
@@ -78,14 +59,16 @@ function PatientDashboard({ profile }: { profile: PatientProfilePayload }) {
                   <div className="text-lg font-medium">
                     {appointments[0].doctor.name}
                   </div>
-                  {/* <div className="text-sm text-muted-foreground">{upcomiappointmentsngAppointments[0].specialty}</div> */}
+                  <div className="text-sm text-muted-foreground">
+                    {appointments[0].doctor.specialty}
+                  </div>
                   <div className="flex items-center text-sm">
                     <Calendar className="mr-2 h-4 w-4 text-teal-600" />
-                    {appointments[0].startTime.getDate()}
+                    {new Date(String(appointments[0].startTime)).toISOString()}
                   </div>
                   <div className="flex items-center text-sm">
                     <Clock className="mr-2 h-4 w-4 text-teal-600" />
-                    {appointments[0].startTime.getHours()}
+                    {new Date(String(appointments[0].startTime)).toISOString()}
                   </div>
                 </div>
               ) : (
@@ -142,50 +125,55 @@ function PatientDashboard({ profile }: { profile: PatientProfilePayload }) {
         <h2 className="text-xl font-bold mb-4">Upcoming Appointments</h2>
         {appointments?.length > 0 ? (
           <div className="space-y-4">
-            {appointments.map((appointment) => (
-              <Card key={appointment.id}>
-                <CardContent className="p-6">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                    <div className="space-y-1">
-                      <h3 className="font-medium">{appointment.doctor.name}</h3>
-                      {/* <p className="text-sm text-muted-foreground">{appointment.specialty}</p> */}
-                    </div>
-                    <div className="flex items-center gap-4 mt-4 md:mt-0">
-                      <div className="flex flex-col">
-                        <div className="flex items-center">
-                          <Calendar className="mr-2 h-4 w-4 text-teal-600" />
-                          <span className="text-sm">
-                            {appointment.startTime.getDate()}
-                          </span>
+            {appointments.map((appointment) => {
+              const date = new Date(appointment.startTime);
+              const fullDate = date.toISOString().split("T")[0];
+              const fullTime = `${date.getHours()}:${date.getMinutes()}`;
+              return (
+                <Card key={appointment.id}>
+                  <CardContent className="p-6">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                      <div className="space-y-1">
+                        <h3 className="font-medium">
+                          {appointment.doctor.name}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {appointment.doctor.specialty}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-4 mt-4 md:mt-0">
+                        <div className="flex flex-col">
+                          <div className="flex items-center">
+                            <Calendar className="mr-2 h-4 w-4 text-teal-600" />
+                            <span className="text-sm">{fullDate}</span>
+                          </div>
+                          <div className="flex items-center">
+                            <Clock className="mr-2 h-4 w-4 text-teal-600" />
+                            <span className="text-sm">{fullTime}</span>
+                          </div>
                         </div>
-                        <div className="flex items-center">
-                          <Clock className="mr-2 h-4 w-4 text-teal-600" />
-                          <span className="text-sm">
-                            {appointment.startTime.getTime()}
-                          </span>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" asChild>
+                            <Link
+                              href={`/patient/appointments/${appointment.id}`}
+                            >
+                              View
+                            </Link>
+                          </Button>
+                          <Button variant="outline" size="sm" asChild>
+                            <Link
+                              href={`/patient/appointments/${appointment.id}/edit`}
+                            >
+                              Edit
+                            </Link>
+                          </Button>
                         </div>
                       </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" asChild>
-                          <Link
-                            href={`/patient/appointments/${appointment.id}`}
-                          >
-                            View
-                          </Link>
-                        </Button>
-                        <Button variant="outline" size="sm" asChild>
-                          <Link
-                            href={`/patient/appointments/${appointment.id}/edit`}
-                          >
-                            Edit
-                          </Link>
-                        </Button>
-                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         ) : (
           <Card>

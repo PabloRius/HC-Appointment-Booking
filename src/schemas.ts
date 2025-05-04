@@ -72,3 +72,11 @@ export const DoctorRegisterSchema = z.object({
   gender: z.enum(["male", "female", "other"]),
   specialty: z.string().min(1),
 });
+
+export const appointmentSchema = z.object({
+  notes: z.string().optional(),
+  startTime: z.string().datetime({ message: "startTime must be ISO format" }),
+  endTime: z.string().datetime({ message: "endTime must be ISO format" }),
+  doctorId: z.string().length(24, "Invalid doctorId format"),
+  patientId: z.string().length(24, "Invalid patientId format"),
+});

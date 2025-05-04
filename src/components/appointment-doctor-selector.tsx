@@ -140,8 +140,6 @@ export function AppointmentDoctorSelector({
                                   doctorId === doctor.id &&
                                   startTimeString === slot.startTime &&
                                   endTimeString === slot.endTime;
-                                console.log(startTimeString, slot.startTime);
-                                console.log(endTimeString, slot.endTime);
                                 return (
                                   <Button
                                     key={slot.id}

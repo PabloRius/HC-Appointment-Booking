@@ -20,10 +20,10 @@ export async function GET() {
   }
 
   const { id: profileId, role } = user;
-  console.log(user);
   if (role === "patient") {
     const patientProfile = await prisma.patientProfile.findUnique({
       where: { userId: profileId },
+      include: { appointments: { include: { doctor: true } } },
     });
 
     if (!patientProfile) {

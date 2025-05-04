@@ -56,7 +56,16 @@ export function AppointmentDateSelector({
               <Calendar
                 mode="single"
                 selected={appointmentDate}
-                onSelect={setAppointmentDate}
+                onSelect={(date) => {
+                  if (date) {
+                    const localDate = new Date(
+                      date.getFullYear(),
+                      date.getMonth(),
+                      date.getDate()
+                    );
+                    setAppointmentDate(localDate);
+                  }
+                }}
                 initialFocus
                 disabled={(date) => {
                   // Disable past dates and weekends

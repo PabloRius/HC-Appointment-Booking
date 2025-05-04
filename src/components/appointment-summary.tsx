@@ -7,6 +7,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useProfile } from "@/hooks/useProfile";
+import { redirect } from "next/navigation";
 
 export default function AppointmentSummary({
   doctor,
@@ -18,10 +20,24 @@ export default function AppointmentSummary({
   endTime: Date;
 }) {
   const [notes, setNotes] = useState("");
+  const { profile } = useProfile();
 
-  const handleConfirm = () => {
-    // In a real app, this would create the appointment in the database
-    // For demo purposes, we'll just redirect to the appointments page
+  const handleConfirm = async () => {
+    try {
+      await fetch("/api/appointment", {
+        method: "POST",
+        body: JSON.stringify({
+          notes,
+          startTime,
+          endTime,
+          doctorId: doctor.id,
+          patientId: profile?.id,
+        }),
+      });
+      redirect("/dashboard");
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   if (!doctor || !startTime || !endTime) {

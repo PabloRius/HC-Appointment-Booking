@@ -16,7 +16,9 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const fromDate = new Date(dateParam);
+    const [year, month, day] = dateParam.split("-").map(Number);
+    const fromDate = new Date(Date.UTC(year, month - 1, day));
+
     const maxLookahead = 15;
     const daysWithSlots: { date: Date; doctors: DoctorAvailability[] }[] = [];
 
@@ -26,7 +28,9 @@ export async function GET(request: NextRequest) {
       offset++
     ) {
       const currentDate = new Date(fromDate);
-      currentDate.setDate(fromDate.getDate() + offset);
+      currentDate.setUTCDate(fromDate.getUTCDate() + offset);
+      console.log("----------------");
+      console.log(currentDate);
 
       const doctors = await prisma.doctorProfile.findMany({
         where: { specialty: type },
@@ -40,6 +44,7 @@ export async function GET(request: NextRequest) {
               .map((slot) => {
                 if (!slot.isRecurring) {
                   if (isSameDay(slot.validFrom, currentDate)) {
+                    console.log(slot.validFrom);
                     return {
                       id: slot.id,
                       startTime: `${String(slot.startHour).padStart(
