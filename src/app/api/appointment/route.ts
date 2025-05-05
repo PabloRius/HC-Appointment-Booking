@@ -23,14 +23,28 @@ export async function POST(req: Request) {
       );
     }
 
+    const existingAppointment = await prisma.appointment.findMany({
+      where: {
+        doctorId: data.doctorId,
+        startTime: data.startTime,
+      },
+    });
+
+    if (existingAppointment.length > 0) {
+      return NextResponse.json(
+        { error: "Slot already taken" },
+        { status: 409 }
+      );
+    }
+
     const appointment = await prisma.appointment.create({
       data: {
         status: "confirmed",
         notes: data.notes,
         startTime: new Date(data.startTime),
         endTime: new Date(data.endTime),
-        doctorId: data.doctorId,
-        patientId: data.patientId,
+        doctor: { connect: { id: data.doctorId } },
+        patient: { connect: { id: data.patientId } },
       },
     });
 

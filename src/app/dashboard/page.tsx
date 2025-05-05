@@ -134,7 +134,7 @@ function PatientDashboard({ profile }: { profile: PatientProfilePayload }) {
                 className="w-full justify-start"
                 asChild
               >
-                <Link href="/patient/profile">
+                <Link href="/dashboard/profile">
                   <User className="mr-2 h-4 w-4" />
                   Update Profile
                 </Link>

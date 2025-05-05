@@ -1,7 +1,6 @@
 import prisma from "@/prisma";
 import { NextResponse } from "next/server";
 
-// GET - Fetch availability for a date range
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const doctorId = searchParams.get("doctorId");
@@ -14,6 +13,14 @@ export async function GET(request: Request) {
     );
   }
 
+  if (!startDate) {
+    return NextResponse.json(
+      { error: "Start date is required" },
+      { status: 400 }
+    );
+  }
+  console.log(doctorId, startDate);
+
   try {
     const availability = await prisma.doctorAvailability.findMany({
       where: {
@@ -25,20 +32,18 @@ export async function GET(request: Request) {
           { validUntil: null },
         ],
       },
-      include: { exceptions: true },
     });
 
     return NextResponse.json(availability);
   } catch (error) {
     console.error(error);
     return NextResponse.json(
-      { error: "Failed to fetch availability" },
+      { error: `Failed to fetch availability` },
       { status: 500 }
     );
   }
 }
 
-// POST - Create new availability
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -135,10 +140,9 @@ export async function POST(request: Request) {
         validFrom,
         validUntil: body.validUntil ? new Date(body.validUntil) : null,
       },
-      include: { exceptions: true },
     });
 
-    return NextResponse.json(result);
+    return NextResponse.json(result, { status: 201 });
   } catch (error) {
     console.error(error);
     return NextResponse.json(
@@ -148,7 +152,6 @@ export async function POST(request: Request) {
   }
 }
 
-// PUT - Update availability
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
@@ -172,10 +175,9 @@ export async function PUT(request: Request) {
         validFrom: new Date(body.validFrom),
         validUntil: body.validUntil ? new Date(body.validUntil) : null,
       },
-      include: { exceptions: true },
     });
 
-    return NextResponse.json(updated);
+    return NextResponse.json(updated, { status: 201 });
   } catch (error) {
     console.error(error);
     return NextResponse.json(
@@ -185,7 +187,6 @@ export async function PUT(request: Request) {
   }
 }
 
-// PUT - Delete availability
 export async function DELETE(req: Request) {
   try {
     const { searchParams } = new URL(req.url);

@@ -11,7 +11,7 @@ export const Header = () => {
       <SidebarTrigger />
       <div className="ml-auto flex items-center gap-4">
         <Button variant="outline" size="sm" asChild disabled>
-          <Link href="/patient/profile">
+          <Link href="/dashboard/profile">
             <User className="mr-2 h-4 w-4" />
             {profile?.name}
           </Link>

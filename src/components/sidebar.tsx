@@ -1,4 +1,4 @@
-import { Calendar, Home, LogOut, Settings, User } from "lucide-react";
+import { Calendar, Home, LogOut, User } from "lucide-react";
 import Link from "next/link";
 
 import {
@@ -71,17 +71,9 @@ export const AppSidebar = () => {
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Profile">
-              <Link href="/profile">
+              <Link href="/dashboard/profile">
                 <User className="h-4 w-4" />
                 <span>Profile</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Settings">
-              <Link href="/settings">
-                <Settings className="h-4 w-4" />
-                <span>Settings</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

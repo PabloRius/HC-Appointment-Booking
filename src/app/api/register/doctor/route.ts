@@ -37,8 +37,8 @@ export async function POST(request: Request) {
 
     if (existingUser) {
       return NextResponse.json(
-        { error: "National ID is already registered" },
-        { status: 400 }
+        { error: "ID is already registered" },
+        { status: 409 }
       );
     }
 
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
       },
     });
 
-    await prisma.doctorProfile.create({
+    const newDoctor = await prisma.doctorProfile.create({
       data: {
         userId: newUser.id,
         name,
@@ -61,12 +61,10 @@ export async function POST(request: Request) {
         gender,
         specialty,
       },
+      include: { appointments: true },
     });
 
-    return NextResponse.json(
-      { message: "User registered successfully" },
-      { status: 200 }
-    );
+    return NextResponse.json({ ...newDoctor }, { status: 201 });
   } catch (err) {
     console.error("Registration error:", err);
     return NextResponse.json(

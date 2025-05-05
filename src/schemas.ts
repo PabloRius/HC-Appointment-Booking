@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { specialties } from "./types/prisma-payloads";
 
 export const LoginSchema = z.object({
   id: z.string().min(1, "ID is required"),
@@ -40,7 +41,7 @@ export const RegisterSchema = z.object({
       return date >= minDate;
     }, "You must be under 120 years old"),
   gender: z.enum(["male", "female", "other"]),
-  address: z.string().max(500, "Address is too long"),
+  address: z.string().max(500, "Address is too long").optional(),
 });
 
 export const DoctorRegisterSchema = z.object({
@@ -70,7 +71,7 @@ export const DoctorRegisterSchema = z.object({
       .regex(/^\d+$/, "Phone number must contain only digits"),
   }),
   gender: z.enum(["male", "female", "other"]),
-  specialty: z.string().min(1),
+  specialty: z.enum(specialties),
 });
 
 export const appointmentSchema = z.object({

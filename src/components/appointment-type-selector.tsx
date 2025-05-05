@@ -11,31 +11,33 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Specialty } from "@/types/prisma-payloads";
+import { ElementType } from "react";
 
 // Mock data for appointment types
-const appointmentTypes = [
+const appointmentTypes: {
+  id: Specialty;
+  description: string;
+  icon: ElementType;
+}[] = [
   {
-    id: "general-medicine",
-    name: "General Medicine",
+    id: "General Medicine",
     description: "Regular check-ups, common illnesses, and preventive care",
     icon: Stethoscope,
   },
   {
-    id: "cardiology",
-    name: "Cardiology",
+    id: "Cardiology",
     description:
       "Heart-related issues, blood pressure, and cardiovascular health",
     icon: Heart,
   },
   {
-    id: "neurology",
-    name: "Neurology",
+    id: "Neurology",
     description: "Brain and nervous system disorders, headaches, and seizures",
     icon: Brain,
   },
   {
-    id: "orthodontics",
-    name: "Orthodontics",
+    id: "Orthodontics",
     description: "Dental alignment, braces, and oral health",
     icon: Tooth,
   },
@@ -73,7 +75,7 @@ export function AppointmentTypeSelector({
                 value={type.id}
                 id={type.id}
                 className="peer sr-only"
-                aria-label={type.name}
+                aria-label={type.id}
               />
               <Label
                 htmlFor={type.id}
@@ -83,7 +85,7 @@ export function AppointmentTypeSelector({
                   <Icon className="h-5 w-5 text-teal-600" />
                 </div>
                 <div className="space-y-1">
-                  <p className="font-medium leading-none">{type.name}</p>
+                  <p className="font-medium leading-none">{type.id}</p>
                   <p className="text-sm text-muted-foreground">
                     {type.description}
                   </p>

@@ -29,12 +29,13 @@ export async function GET(request: NextRequest) {
     ) {
       const currentDate = new Date(fromDate);
       currentDate.setUTCDate(fromDate.getUTCDate() + offset);
-      console.log("----------------");
-      console.log(currentDate);
 
       const doctors = await prisma.doctorProfile.findMany({
         where: { specialty: type },
-        include: { availability: { include: { exceptions: true } } },
+        include: {
+          availability: { include: { exceptions: true } },
+          appointments: true,
+        },
       });
 
       const dayResults = await Promise.all(
@@ -42,9 +43,23 @@ export async function GET(request: NextRequest) {
           const slots: { id: string; startTime: string; endTime: string }[] =
             doctor.availability
               .map((slot) => {
-                if (!slot.isRecurring) {
-                  if (isSameDay(slot.validFrom, currentDate)) {
-                    console.log(slot.validFrom);
+                if (
+                  !slot.isRecurring &&
+                  isSameDay(slot.validFrom, currentDate)
+                ) {
+                  const slotStart = currentDate;
+                  slotStart.setUTCHours(slot.startHour, slot.startMinute, 0, 0);
+
+                  const isBooked = doctor.appointments.some((booked) => {
+                    console.log(
+                      booked.startTime,
+                      slotStart,
+                      slotStart === booked.startTime
+                    );
+                    return slotStart === booked.startTime;
+                  });
+                  if (!isBooked) {
+                    console.log(`${slotStart} - Isn't booked, adding`);
                     return {
                       id: slot.id,
                       startTime: `${String(slot.startHour).padStart(
@@ -58,8 +73,11 @@ export async function GET(request: NextRequest) {
                     };
                   }
                 }
+                return null;
               })
-              .filter((slot) => !!slot);
+              .filter(
+                (slot): slot is NonNullable<typeof slot> => slot !== null
+              );
 
           return {
             id: doctor.id,

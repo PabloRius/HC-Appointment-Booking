@@ -11,3 +11,10 @@ export type DoctorProfilePayload = Prisma.DoctorProfileGetPayload<{
     availability: { include: { exceptions: true } };
   };
 }>;
+export const specialties = [
+  "General Medicine",
+  "Cardiology",
+  "Neurology",
+  "Orthodontics",
+] as const;
+export type Specialty = (typeof specialties)[number];

@@ -35,6 +35,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useProfile } from "@/hooks/useProfile";
 import { cn } from "@/lib/utils";
 import { DoctorRegisterSchema, RegisterSchema } from "@/schemas";
+import { specialties } from "@/types/prisma-payloads";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { ArrowLeft, CalendarIcon, Eye, EyeOff, Loader2 } from "lucide-react";
@@ -100,7 +101,7 @@ export default function RegisterPage() {
         number: "",
       },
       gender: "male",
-      specialty: "general medicine",
+      specialty: "General Medicine",
     },
     mode: "onBlur",
     criteriaMode: "all",
@@ -673,15 +674,11 @@ export default function RegisterPage() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="General medicine">
-                                General medicine
-                              </SelectItem>
-                              <SelectItem value="Neurology">
-                                Neurology
-                              </SelectItem>
-                              <SelectItem value="Orthodoncy">
-                                Orthodoncy
-                              </SelectItem>
+                              {specialties.map((spec) => (
+                                <SelectItem key={spec} value={spec}>
+                                  {spec}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />
