@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, CalendarIcon, Save, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -17,6 +17,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Card,
   CardContent,
@@ -28,6 +29,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -36,35 +42,57 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { useProfile } from "@/hooks/useProfile";
+import { format } from "date-fns";
 
 export default function ProfileSettingsPage() {
   const router = useRouter();
+  const { profile, refetch } = useProfile();
   const [isEditing, setIsEditing] = useState(false);
 
-  // Mock user data
   const [userData, setUserData] = useState({
-    fullName: "John Doe",
-    email: "john.doe@example.com",
-    phone: "+1 (555) 123-4567",
-    nationalId: "123456789",
-    address: "123 Main St, Anytown, USA",
-    dateOfBirth: "1985-05-15",
-    gender: "Male",
-    emergencyContact: "Jane Doe (+1 555-987-6543)",
-    bloodType: "O+",
-    allergies: "None",
-    medicalConditions: "Hypertension",
+    id: profile?.id,
+    name: profile?.name || "",
+    email: profile?.email || "",
+    phone: profile?.phone || "",
+    address: profile?.role === "patient" ? profile?.address || "" : undefined,
+    dateOfBirth:
+      profile?.role === "patient" ? profile?.dateOfBirth || "" : undefined,
+    gender: profile?.gender,
   });
 
-  const handleSave = () => {
-    // In a real app, this would save the user data to the database
+  const handleSave = async () => {
     setIsEditing(false);
-    // Show success message or notification
+
+    try {
+      await fetch("/api/register", {
+        method: "PUT",
+        body: JSON.stringify(userData),
+      });
+    } catch {
+      console.error("Error updating profile");
+    }
+
+    refetch();
   };
 
   const handleDeleteAccount = () => {
     // In a real app, this would delete the user account
     router.push("/");
+  };
+
+  const toggleEditMode = () => {
+    setIsEditing(!isEditing);
+    setUserData({
+      id: profile?.id,
+      name: profile?.name || "",
+      email: profile?.email || "",
+      phone: profile?.phone || "",
+      address: profile?.role === "patient" ? profile?.address || "" : undefined,
+      dateOfBirth:
+        profile?.role === "patient" ? profile?.dateOfBirth || "" : undefined,
+      gender: profile?.gender,
+    });
   };
 
   return (
@@ -94,7 +122,7 @@ export default function ProfileSettingsPage() {
               </div>
               <Button
                 variant={isEditing ? "default" : "outline"}
-                onClick={() => setIsEditing(!isEditing)}
+                onClick={toggleEditMode}
                 className={isEditing ? "bg-teal-600 hover:bg-teal-700" : ""}
               >
                 {isEditing ? "Cancel" : "Edit"}
@@ -106,9 +134,9 @@ export default function ProfileSettingsPage() {
                   <Label htmlFor="fullName">Full Name</Label>
                   <Input
                     id="fullName"
-                    value={userData.fullName}
+                    value={userData.name}
                     onChange={(e) =>
-                      setUserData({ ...userData, fullName: e.target.value })
+                      setUserData({ ...userData, name: e.target.value })
                     }
                     disabled={!isEditing}
                   />
@@ -140,48 +168,74 @@ export default function ProfileSettingsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="nationalId">National ID</Label>
-                  <Input
-                    id="nationalId"
-                    value={userData.nationalId}
-                    onChange={(e) =>
-                      setUserData({ ...userData, nationalId: e.target.value })
-                    }
-                    disabled={!isEditing}
-                  />
-                </div>
-
-                <div className="space-y-2">
                   <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                  <Input
-                    id="dateOfBirth"
-                    type="date"
-                    value={userData.dateOfBirth}
-                    onChange={(e) =>
-                      setUserData({ ...userData, dateOfBirth: e.target.value })
-                    }
-                    disabled={!isEditing}
-                  />
+                  <Popover>
+                    <PopoverTrigger asChild disabled={!isEditing}>
+                      <Button
+                        variant="outline"
+                        className="w-full pl-3 text-left font-normal"
+                      >
+                        {userData.dateOfBirth ? (
+                          format(userData.dateOfBirth, "PPP")
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={userData.dateOfBirth}
+                        onSelect={(e) =>
+                          setUserData({ ...userData, dateOfBirth: e })
+                        }
+                        disabled={(date) =>
+                          date > new Date() || date < new Date("1900-01-01")
+                        }
+                        initialFocus
+                        captionLayout="dropdown-buttons"
+                        fromYear={1920}
+                        toYear={new Date().getFullYear()}
+                        classNames={{
+                          day_hidden: "invisible",
+                          dropdown:
+                            "px-0 py-1.5 rounded-md bg-popover text-popover-foreground text-sm  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background",
+                          caption_dropdowns: "flex gap-3",
+                          vhidden: "hidden",
+                          caption_label: "hidden",
+                        }}
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="gender">Gender</Label>
-                  <Select
-                    disabled={!isEditing}
-                    value={userData.gender}
-                    onValueChange={(value) =>
-                      setUserData({ ...userData, gender: value })
-                    }
-                  >
-                    <SelectTrigger id="gender">
-                      <SelectValue placeholder="Select gender" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Male">Male</SelectItem>
-                      <SelectItem value="Female">Female</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  {isEditing ? (
+                    <Select
+                      disabled={!isEditing}
+                      value={userData.gender}
+                      onValueChange={(value) =>
+                        setUserData({ ...userData, gender: value })
+                      }
+                    >
+                      <SelectTrigger id="gender">
+                        <SelectValue placeholder="Select gender" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="male">Male</SelectItem>
+                        <SelectItem value="female">Female</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input
+                      id="gender"
+                      value={userData.gender}
+                      disabled={true}
+                    />
+                  )}
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
@@ -191,21 +245,6 @@ export default function ProfileSettingsPage() {
                     value={userData.address}
                     onChange={(e) =>
                       setUserData({ ...userData, address: e.target.value })
-                    }
-                    disabled={!isEditing}
-                  />
-                </div>
-
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="emergencyContact">Emergency Contact</Label>
-                  <Input
-                    id="emergencyContact"
-                    value={userData.emergencyContact}
-                    onChange={(e) =>
-                      setUserData({
-                        ...userData,
-                        emergencyContact: e.target.value,
-                      })
                     }
                     disabled={!isEditing}
                   />
