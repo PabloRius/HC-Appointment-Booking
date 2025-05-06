@@ -16,11 +16,6 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 
         if (!validatedFields.success) return null;
 
-        console.log("--------------------------------");
-        console.log("--------------------------------");
-        console.log("--------------------------------");
-        console.log("--------------------------------");
-        console.log("--------------------------------");
         const { id, password } = validatedFields.data;
         const user = await prisma.user.findUnique({
           where: { loginId: id },
@@ -30,7 +25,6 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 
         const passwordsMatch = await bcrypt.compare(password, user.password);
         if (!passwordsMatch) return null;
-        console.log(user.id);
         return {
           id: user.id,
         };

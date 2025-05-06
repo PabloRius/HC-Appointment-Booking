@@ -1,21 +1,9 @@
 "use client";
 
-import { ArrowLeft, CalendarIcon, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, CalendarIcon, Eye, EyeOff, Save } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -46,9 +34,13 @@ import { useProfile } from "@/hooks/useProfile";
 import { format } from "date-fns";
 
 export default function ProfileSettingsPage() {
-  const router = useRouter();
   const { profile, refetch } = useProfile();
   const [isEditing, setIsEditing] = useState(false);
+
+  const [oldPassword, setOldPassword] = useState<string>("");
+  const [seeOldPassword, setSeeOldPassword] = useState<boolean>(false);
+  const [newPassword, setNewPassword] = useState<string>("");
+  const [seeNewPassword, setSeeNewPassword] = useState<boolean>(false);
 
   const [userData, setUserData] = useState({
     id: profile?.id,
@@ -76,11 +68,6 @@ export default function ProfileSettingsPage() {
     refetch();
   };
 
-  const handleDeleteAccount = () => {
-    // In a real app, this would delete the user account
-    router.push("/");
-  };
-
   const toggleEditMode = () => {
     setIsEditing(!isEditing);
     setUserData({
@@ -93,6 +80,19 @@ export default function ProfileSettingsPage() {
         profile?.role === "patient" ? profile?.dateOfBirth || "" : undefined,
       gender: profile?.gender,
     });
+  };
+
+  const handleChangePassword = async () => {
+    try {
+      await fetch("/api/profile/password", {
+        method: "PUT",
+        body: JSON.stringify({ id: profile?.id, oldPassword, newPassword }),
+      });
+      setOldPassword("");
+      setNewPassword("");
+    } catch {
+      console.error("Error updating password");
+    }
   };
 
   return (
@@ -274,68 +274,74 @@ export default function ProfileSettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="current-password">Current Password</Label>
-                <Input id="current-password" type="password" />
+              <Label htmlFor="old-password" className="my-1">
+                Current Password
+              </Label>
+              <div className="relative">
+                <Input
+                  id="old-password"
+                  type={seeOldPassword ? "text" : "password"}
+                  value={oldPassword}
+                  onChange={(e) => {
+                    setOldPassword(e.target.value);
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-0 h-full px-3"
+                  onClick={() => setSeeOldPassword(!seeOldPassword)}
+                >
+                  {seeOldPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                  <span className="sr-only">
+                    {seeOldPassword ? "Hide password" : "Show password"}
+                  </span>
+                </Button>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="new-password">New Password</Label>
-                <Input id="new-password" type="password" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirm New Password</Label>
-                <Input id="confirm-password" type="password" />
+              <Label htmlFor="new-password" className="my-1">
+                New Password
+              </Label>
+              <div className="relative">
+                <Input
+                  id="new-password"
+                  type={seeNewPassword ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => {
+                    setNewPassword(e.target.value);
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-0 h-full px-3"
+                  onClick={() => setSeeNewPassword(!seeNewPassword)}
+                >
+                  {seeNewPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                  <span className="sr-only">
+                    {seeNewPassword ? "Hide password" : "Show password"}
+                  </span>
+                </Button>
               </div>
             </CardContent>
             <CardFooter className="flex justify-between">
               <Button variant="outline">Cancel</Button>
-              <Button className="bg-teal-600 hover:bg-teal-700">
+              <Button
+                className="bg-teal-600 hover:bg-teal-700"
+                onClick={handleChangePassword}
+              >
                 Update Password
               </Button>
             </CardFooter>
-          </Card>
-
-          <Card className="border-red-200">
-            <CardHeader>
-              <CardTitle className="text-red-600">Danger Zone</CardTitle>
-              <CardDescription>
-                Irreversible actions for your account
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">
-                Once you delete your account, there is no going back. Please be
-                certain.
-              </p>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive">
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete Account
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>
-                      Are you absolutely sure?
-                    </AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete
-                      your account and remove your data from our servers.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleDeleteAccount}
-                      className="bg-red-600 hover:bg-red-700"
-                    >
-                      Delete Account
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
