@@ -95,15 +95,17 @@ export default function AppointmentsPage() {
                             </span>
                           </div>
                         </div>
-                        <div className="flex gap-2">
-                          <Button variant="destructive" size="sm" asChild>
-                            <Link
-                              href={`/patient/appointments/${appointment.id}/cancel`}
-                            >
-                              Cancel
-                            </Link>
-                          </Button>
-                        </div>
+                        {profile?.role === "patient" && (
+                          <div className="flex gap-2">
+                            <Button variant="destructive" size="sm" asChild>
+                              <Link
+                                href={`/patient/appointments/${appointment.id}/cancel`}
+                              >
+                                Cancel
+                              </Link>
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </CardContent>
