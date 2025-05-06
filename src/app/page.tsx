@@ -67,7 +67,7 @@ export default function Home() {
                 <Image
                   alt="Healthcare professionals"
                   className="rounded-lg object-cover"
-                  src="https://ie-explorer.s3.eu-west-1.amazonaws.com/icons/ProfilePlaceholder.svg"
+                  src="/Rod_of_asclepius.png"
                   width="550"
                   height="550"
                 />
