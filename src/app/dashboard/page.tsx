@@ -149,7 +149,7 @@ function PatientDashboard({ profile }: { profile: PatientProfilePayload }) {
         {appointments?.length > 0 ? (
           <div className="space-y-4">
             {appointments.map((appointment) => {
-              const date = new Date(appointment.startTime);
+              const date = new Date(new Date(appointment.startTime));
               const fullDate = date.toISOString().split("T")[0];
               const fullTime = `${String(date.getHours()).padStart(
                 2,
@@ -221,8 +221,9 @@ function DoctorDashboard({ profile }: { profile: DoctorProfilePayload }) {
   const appointments = profile.appointments || [];
   const todayAppointments =
     appointments?.filter(
-      (appointment) => appointment.startTime <= endOfDay(new Date())
+      (appointment) => new Date(appointment.startTime) <= endOfDay(new Date())
     ) || [];
+  console.log(appointments);
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -242,7 +243,7 @@ function DoctorDashboard({ profile }: { profile: DoctorProfilePayload }) {
           </CardContent>
           <CardFooter>
             <Button variant="outline" size="sm" asChild>
-              <Link href="/doctor/appointments">
+              <Link href="/dashboard/appointments">
                 <Calendar className="mr-2 h-4 w-4" />
                 View Schedule
               </Link>
@@ -256,22 +257,35 @@ function DoctorDashboard({ profile }: { profile: DoctorProfilePayload }) {
             <CardDescription>Your next scheduled appointment</CardDescription>
           </CardHeader>
           <CardContent>
-            {todayAppointments.length > 0 ? (
+            {appointments.length > 0 ? (
               <div className="space-y-2">
                 <div className="text-lg font-medium">
-                  {todayAppointments[0].patient.name}
+                  {appointments[0].patient?.name}
                 </div>
-                <div className="flex items-center text-sm">
-                  <Clock className="mr-2 h-4 w-4 text-teal-600" />
-                  {todayAppointments[0].startTime.getTime()}
+                <div className="flex flex-col text-sm">
+                  <div className="flex items-center">
+                    <Calendar className="mr-2 h-4 w-4 text-teal-600" />
+                    <span className="text-sm">
+                      {
+                        new Date(appointments[0].startTime)
+                          .toISOString()
+                          .split("T")[0]
+                      }
+                    </span>
+                  </div>
+                  <div className="flex items-center">
+                    <Clock className="mr-2 h-4 w-4 text-teal-600" />
+                    {`${String(
+                      new Date(appointments[0].startTime).getHours()
+                    ).padStart(2, "0")}:${String(
+                      new Date(appointments[0].startTime).getMinutes()
+                    ).padStart(2, "0")}`}
+                  </div>
                 </div>
-                {/* <div className="text-sm text-muted-foreground">
-                  {todayAppointments[0].type}
-                </div> */}
               </div>
             ) : (
               <div className="text-sm text-muted-foreground">
-                No appointments today
+                No upcoming appointments
               </div>
             )}
           </CardContent>
@@ -308,45 +322,55 @@ function DoctorDashboard({ profile }: { profile: DoctorProfilePayload }) {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {todayAppointments.map((appointment) => (
-                  <div
-                    key={appointment.id}
-                    className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-teal-100">
-                        <User className="h-5 w-5 text-teal-600" />
-                      </div>
-                      <div>
-                        <h4 className="font-medium">
-                          {appointment.patient.name}
-                        </h4>
-                        <div className="flex items-center text-sm text-muted-foreground">
-                          <Clock className="mr-1 h-3 w-3" />
-                          {appointment.startTime.getTime()}
+                {todayAppointments.length > 0 ? (
+                  todayAppointments.map((appointment) => (
+                    <div
+                      key={appointment.id}
+                      className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-teal-100">
+                          <User className="h-5 w-5 text-teal-600" />
+                        </div>
+                        <div>
+                          <h4 className="font-medium">
+                            {appointment.patient?.name}
+                          </h4>
+                          <div className="flex items-center text-sm text-muted-foreground">
+                            <Clock className="mr-1 h-3 w-3" />
+                            {new Date(appointment.startTime).getTime()}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" asChild>
-                        <Link href={`/doctor/appointments/${appointment.id}`}>
-                          View
-                        </Link>
-                      </Button>
-                      <Button
-                        size="sm"
-                        className="bg-teal-600 hover:bg-teal-700"
-                        asChild
-                      >
-                        <Link
-                          href={`/doctor/appointments/${appointment.id}/start`}
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" asChild>
+                          <Link href={`/doctor/appointments/${appointment.id}`}>
+                            View
+                          </Link>
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="bg-teal-600 hover:bg-teal-700"
+                          asChild
                         >
-                          Start
-                        </Link>
-                      </Button>
+                          <Link
+                            href={`/doctor/appointments/${appointment.id}/start`}
+                          >
+                            Start
+                          </Link>
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <Card>
+                    <CardContent className="p-6 text-center">
+                      <p className="text-muted-foreground">
+                        You have no appointments today
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -361,35 +385,61 @@ function DoctorDashboard({ profile }: { profile: DoctorProfilePayload }) {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {appointments.map((appointment) => (
-                  <div
-                    key={appointment?.id}
-                    className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-teal-100">
-                        <User className="h-5 w-5 text-teal-600" />
-                      </div>
-                      <div>
-                        <h4 className="font-medium">
-                          {appointment.patient.name}
-                        </h4>
-                        <div className="flex items-center text-sm text-muted-foreground">
-                          <Calendar className="mr-1 h-3 w-3" />
-                          {appointment.startTime.getDay()} at{" "}
-                          {appointment.startTime.getHours()} -{" "}
-                        </div>
-                      </div>
-                    </div>
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={`/doctor/appointments/${appointment.id}`}>
-                        View
+              {appointments?.length > 0 ? (
+                <div className="space-y-4">
+                  {appointments.map((appointment) => {
+                    const date = new Date(new Date(appointment.startTime));
+                    const fullDate = date.toISOString().split("T")[0];
+                    const fullTime = `${String(date.getHours()).padStart(
+                      2,
+                      "0"
+                    )}:${String(date.getMinutes()).padStart(2, "0")}`;
+
+                    return (
+                      <Card key={appointment.id}>
+                        <CardContent className="p-6">
+                          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                            <div className="space-y-1">
+                              <h3 className="font-medium">
+                                {appointment.patient.name}
+                              </h3>
+                            </div>
+                            <div className="flex items-center gap-4 mt-4 md:mt-0">
+                              <div className="flex flex-col">
+                                <div className="flex items-center">
+                                  <Calendar className="mr-2 h-4 w-4 text-teal-600" />
+                                  <span className="text-sm">{fullDate}</span>
+                                </div>
+                                <div className="flex items-center">
+                                  <Clock className="mr-2 h-4 w-4 text-teal-600" />
+                                  <span className="text-sm">{fullTime}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              ) : (
+                <Card>
+                  <CardContent className="p-6 text-center">
+                    <p className="text-muted-foreground">
+                      You have no upcoming appointments
+                    </p>
+                    <Button
+                      className="mt-4 bg-teal-600 hover:bg-teal-700"
+                      asChild
+                    >
+                      <Link href="dashboard/appointments/new">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Book an Appointment
                       </Link>
                     </Button>
-                  </div>
-                ))}
-              </div>
+                  </CardContent>
+                </Card>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

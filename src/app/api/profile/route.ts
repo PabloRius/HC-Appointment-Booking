@@ -45,7 +45,12 @@ export async function GET() {
   if (role === "doctor") {
     const doctorProfile = await prisma.doctorProfile.findUnique({
       where: { userId: profileId },
-      include: { appointments: { where: { startTime: { gte: now } } } },
+      include: {
+        appointments: {
+          where: { startTime: { gte: now } },
+          include: { patient: true },
+        },
+      },
     });
 
     if (!doctorProfile) {

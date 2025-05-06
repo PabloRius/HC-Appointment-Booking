@@ -49,26 +49,22 @@ export const AppSidebar = () => {
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Appointments">
-              <Link
-                href={
-                  role === "patient"
-                    ? "/dashboard/appointments"
-                    : role === "doctor"
-                    ? "/dashboard/availability"
-                    : "/dashboard"
-                }
-              >
+              <Link href="/dashboard/appointments">
                 <Calendar className="h-4 w-4" />
-                <span>
-                  {role === "patient"
-                    ? "Appointments"
-                    : role === "doctor"
-                    ? "Schedule"
-                    : null}
-                </span>
+                <span>Appointments</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
+          {role === "doctor" && (
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip="Appointments">
+                <Link href="/dashboard/availability">
+                  <Calendar className="h-4 w-4" />
+                  <span>Schedule</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Profile">
               <Link href="/dashboard/profile">

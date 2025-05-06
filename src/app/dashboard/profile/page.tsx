@@ -51,6 +51,8 @@ export default function ProfileSettingsPage() {
     dateOfBirth:
       profile?.role === "patient" ? profile?.dateOfBirth || "" : undefined,
     gender: profile?.gender,
+    specialty:
+      profile?.role === "doctor" ? profile?.specialty || "" : undefined,
   });
 
   const handleSave = async () => {
@@ -79,6 +81,8 @@ export default function ProfileSettingsPage() {
       dateOfBirth:
         profile?.role === "patient" ? profile?.dateOfBirth || "" : undefined,
       gender: profile?.gender,
+      specialty:
+        profile?.role === "doctor" ? profile?.specialty || "" : undefined,
     });
   };
 
@@ -86,7 +90,12 @@ export default function ProfileSettingsPage() {
     try {
       await fetch("/api/profile/password", {
         method: "PUT",
-        body: JSON.stringify({ id: profile?.id, oldPassword, newPassword }),
+        body: JSON.stringify({
+          id: profile?.id,
+          role: profile?.role,
+          oldPassword,
+          newPassword,
+        }),
       });
       setOldPassword("");
       setNewPassword("");
@@ -168,46 +177,54 @@ export default function ProfileSettingsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                  <Popover>
-                    <PopoverTrigger asChild disabled={!isEditing}>
-                      <Button
-                        variant="outline"
-                        className="w-full pl-3 text-left font-normal"
-                      >
-                        {userData.dateOfBirth ? (
-                          format(userData.dateOfBirth, "PPP")
-                        ) : (
-                          <span>Pick a date</span>
-                        )}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={userData.dateOfBirth}
-                        onSelect={(e) =>
-                          setUserData({ ...userData, dateOfBirth: e })
-                        }
-                        disabled={(date) =>
-                          date > new Date() || date < new Date("1900-01-01")
-                        }
-                        initialFocus
-                        captionLayout="dropdown-buttons"
-                        fromYear={1920}
-                        toYear={new Date().getFullYear()}
-                        classNames={{
-                          day_hidden: "invisible",
-                          dropdown:
-                            "px-0 py-1.5 rounded-md bg-popover text-popover-foreground text-sm  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background",
-                          caption_dropdowns: "flex gap-3",
-                          vhidden: "hidden",
-                          caption_label: "hidden",
-                        }}
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <Label htmlFor="dateOfBirth">
+                    {profile?.role === "patient"
+                      ? "Date of Birth"
+                      : "Specialty"}
+                  </Label>
+                  {profile?.role === "patient" ? (
+                    <Popover>
+                      <PopoverTrigger asChild disabled={!isEditing}>
+                        <Button
+                          variant="outline"
+                          className="w-full pl-3 text-left font-normal"
+                        >
+                          {userData.dateOfBirth ? (
+                            format(userData.dateOfBirth, "PPP")
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={userData.dateOfBirth}
+                          onSelect={(e) =>
+                            setUserData({ ...userData, dateOfBirth: e })
+                          }
+                          disabled={(date) =>
+                            date > new Date() || date < new Date("1900-01-01")
+                          }
+                          initialFocus
+                          captionLayout="dropdown-buttons"
+                          fromYear={1920}
+                          toYear={new Date().getFullYear()}
+                          classNames={{
+                            day_hidden: "invisible",
+                            dropdown:
+                              "px-0 py-1.5 rounded-md bg-popover text-popover-foreground text-sm  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background",
+                            caption_dropdowns: "flex gap-3",
+                            vhidden: "hidden",
+                            caption_label: "hidden",
+                          }}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  ) : (
+                    <Input value={userData.specialty} disabled={true} />
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -238,17 +255,19 @@ export default function ProfileSettingsPage() {
                   )}
                 </div>
 
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="address">Address</Label>
-                  <Textarea
-                    id="address"
-                    value={userData.address}
-                    onChange={(e) =>
-                      setUserData({ ...userData, address: e.target.value })
-                    }
-                    disabled={!isEditing}
-                  />
-                </div>
+                {profile?.role === "patient" && (
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="address">Address</Label>
+                    <Textarea
+                      id="address"
+                      value={userData.address}
+                      onChange={(e) =>
+                        setUserData({ ...userData, address: e.target.value })
+                      }
+                      disabled={!isEditing}
+                    />
+                  </div>
+                )}
               </div>
             </CardContent>
             {isEditing && (
