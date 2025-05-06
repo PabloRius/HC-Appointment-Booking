@@ -1,6 +1,28 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+## ⚠️ Important Disclaimers
+
+- Local Deployment Limitation: This application will not work by simply cloning and running it locally unless you set up a MongoDB replica set, which is a Prisma requirement. Without this, Prisma operations will fail.
+
+- Live Demo Available: To avoid the complexity of setting up the environment locally, you can fully test and use the application on the live deployed version hosted on Vercel:
+
+      👉 Live demo: https://your-hams-app.vercel.app
+
+  (Replace with your actual deployment URL)
+
+- Dependencies: If you choose to set it up locally anyway, don’t forget to install the dependencies first:
+
+```bash
+npm run install
+# or
+yarn install
+# or
+pnpm install
+# or
+bun install
+```
+
+## 🚀 Getting Started (for development)
 
 First, run the development server:
 
@@ -16,21 +38,17 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 👥 Contributions
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+This project was developed as part of a university software engineering course. The team consisted of two members:
 
-## Learn More
+- Pablo Garcia Rius
+  "Designed and developed the full application"
+  "Desgined and wrote the Test Plan document"
+  "Designed, executed and reported each test case on a Test Case document"
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Shiwita Kumari
+  "Designed and wrote the Software Design Plan document"
+  "Designed and wrote the Implementation Plan document"
+  "Designed and wrote the Prototype Development document"
+  "Designed the final presentation"
