@@ -41,12 +41,18 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 This project was developed as part of a university software engineering course. The team consisted of two members:
 
 - Pablo Garcia Rius
+
+```bash
   "Designed and developed the full application"
   "Desgined and wrote the Test Plan document"
   "Designed, executed and reported each test case on a Test Case document"
+```
 
 - Shiwita Kumari
+
+```bash
   "Designed and wrote the Software Design Plan document"
   "Designed and wrote the Implementation Plan document"
   "Designed and wrote the Prototype Development document"
   "Designed the final presentation"
+```
