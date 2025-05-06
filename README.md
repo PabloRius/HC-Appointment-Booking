@@ -8,8 +8,6 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
       👉 Live demo: https://your-hams-app.vercel.app
 
-  (Replace with your actual deployment URL)
-
 - Dependencies: If you choose to set it up locally anyway, don’t forget to install the dependencies first:
 
 ```bash
