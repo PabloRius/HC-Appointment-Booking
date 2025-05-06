@@ -6,7 +6,7 @@ export async function PUT(request: Request) {
   try {
     const body = await request.json();
 
-    const { id, oldPassword, newPassword } = body;
+    const { id, role, oldPassword, newPassword } = body;
 
     if (!id) {
       return NextResponse.json(
@@ -14,9 +14,14 @@ export async function PUT(request: Request) {
         { status: 400 }
       );
     }
-    const profile = await prisma.patientProfile.findUnique({
-      where: { id },
-    });
+    const profile =
+      role === "patient"
+        ? await prisma.patientProfile.findUnique({
+            where: { id },
+          })
+        : await prisma.doctorProfile.findUnique({
+            where: { id },
+          });
 
     if (!profile) {
       return NextResponse.json({ error: "Patient not found" }, { status: 404 });
