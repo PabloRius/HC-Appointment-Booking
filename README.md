@@ -6,7 +6,7 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 - Live Demo Available: To avoid the complexity of setting up the environment locally, you can fully test and use the application on the live deployed version hosted on Vercel:
 
-      👉 Live demo: https://your-hams-app.vercel.app
+      👉 Live demo: https://hc-appointment-booking.vercel.app/
 
 - Dependencies: If you choose to set it up locally anyway, don’t forget to install the dependencies first:
 
