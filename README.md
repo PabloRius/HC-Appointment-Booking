@@ -44,16 +44,13 @@ This project was developed as part of a university software engineering course. 
 - Pablo Garcia Rius
 
 ```bash
-  "Designed and developed the full application"
-  "Desgined and wrote the Test Plan document"
-  "Designed, executed and reported each test case on a Test Case document"
+  "Shared responsibility in software design, prototype development, testing, and technical documentation"
+  "Specifically contributed to architecture deisign, coding core features, writing and executing test cases, and demo materials."
 ```
 
 - Shiwita Kumari
 
 ```bash
-  "Designed and wrote the Software Design Plan document"
-  "Designed and wrote the Implementation Plan document"
-  "Designed and wrote the Prototype Development document"
-  "Designed the final presentation"
+  "Shared responsibility in software design, prototype development, testing, and technical documentation"
+  "Specifically contributed to design plan, implementation plan, writing and executing test cases, and preparing presentation."
 ```
